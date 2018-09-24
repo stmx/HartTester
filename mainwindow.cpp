@@ -12,7 +12,7 @@
 #include <QTimer>
 #include <QDateTime>
 #include <QFile>
-#define private public
+//#define private public
 #include <QThread>
 
 //QThread::msleep(5000);
