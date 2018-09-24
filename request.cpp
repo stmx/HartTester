@@ -67,7 +67,7 @@ void request::createData(unsigned char *f,int NumberDataByte){
     int i = 0;
     while(i<NumberDataByte){
         str[cursor] = f[i];
-        cursor++;
+        cursor=cursor+1;
         i++;
     }
 }
