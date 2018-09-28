@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>861</width>
-    <height>438</height>
+    <width>910</width>
+    <height>442</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>871</width>
+      <width>921</width>
       <height>711</height>
      </rect>
     </property>
@@ -1175,92 +1175,6 @@
        <string>Clear</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="lineFunc3Addr_1">
-      <property name="geometry">
-       <rect>
-        <x>830</x>
-        <y>130</y>
-        <width>21</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="whatsThis">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Девайс 1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="inputMask">
-       <string>hh</string>
-      </property>
-      <property name="text">
-       <string>0f</string>
-      </property>
-      <property name="maxLength">
-       <number>2</number>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="lineFunc3Addr_2">
-      <property name="geometry">
-       <rect>
-        <x>830</x>
-        <y>160</y>
-        <width>21</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="inputMask">
-       <string>hh</string>
-      </property>
-      <property name="text">
-       <string>02</string>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="lineFunc3Addr_3">
-      <property name="geometry">
-       <rect>
-        <x>830</x>
-        <y>190</y>
-        <width>21</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="inputMask">
-       <string>hh</string>
-      </property>
-      <property name="text">
-       <string>03</string>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="lineFunc3Addr_4">
-      <property name="geometry">
-       <rect>
-        <x>830</x>
-        <y>220</y>
-        <width>21</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="inputMask">
-       <string>hh</string>
-      </property>
-      <property name="text">
-       <string>04</string>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="lineFunc3Addr_5">
-      <property name="geometry">
-       <rect>
-        <x>830</x>
-        <y>250</y>
-        <width>21</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="inputMask">
-       <string>hh</string>
-      </property>
-      <property name="text">
-       <string>05</string>
-      </property>
-     </widget>
      <widget class="QCheckBox" name="checkDevice_1">
       <property name="geometry">
        <rect>
@@ -1345,6 +1259,85 @@
        <bool>true</bool>
       </property>
      </widget>
+     <widget class="QComboBox" name="comboBoxAddressFunc3_1">
+      <property name="geometry">
+       <rect>
+        <x>830</x>
+        <y>130</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="buttonFindDeviceFunc3">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>760</x>
+        <y>10</y>
+        <width>121</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Find</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="buttonResetAddrFunc3">
+      <property name="geometry">
+       <rect>
+        <x>760</x>
+        <y>30</y>
+        <width>121</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Reset address</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBoxAddressFunc3_2">
+      <property name="geometry">
+       <rect>
+        <x>830</x>
+        <y>160</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBoxAddressFunc3_3">
+      <property name="geometry">
+       <rect>
+        <x>830</x>
+        <y>190</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBoxAddressFunc3_4">
+      <property name="geometry">
+       <rect>
+        <x>830</x>
+        <y>220</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBoxAddressFunc3_5">
+      <property name="geometry">
+       <rect>
+        <x>830</x>
+        <y>250</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>
@@ -1353,7 +1346,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>861</width>
+     <width>910</width>
      <height>21</height>
     </rect>
    </property>

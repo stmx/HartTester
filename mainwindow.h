@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QSerialPort>
 #include <QLineEdit>
+#include <QComboBox>
 
 namespace Ui {
 class MainWindow;
@@ -18,9 +19,9 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_pushButton_clicked();
-    void on_buttonClose_clicked();
-    void on_buttonSend_clicked();
+    void connectCOM();
+    void closeCOM();
+    void sendRequest();
 
     void showTime();
     void sendTimerRequest();
@@ -28,9 +29,9 @@ private slots:
     void sendFindRequest();
 
     void readData();
-    void on_buttonClear_clicked();
-    void on_buttonTimerStart_clicked();
-    void on_buttonTimerStop_clicked();
+    void clearText();
+    void startLoop();
+    void stopLoop();
     void on_comboBoxFunc_currentIndexChanged(int index);
     void on_spinBox_valueChanged(int arg1);
     void on_checkLongFrame_stateChanged(int arg1);
@@ -43,23 +44,20 @@ private slots:
     void on_lineFloat_4_textChanged(const QString &arg1);
     void on_lineFloat_5_textChanged(const QString &arg1);
     void on_lineFloat_6_textChanged(const QString &arg1);
-    void on_pushButton_7_clicked();
-    void on_buttonFunction3Send_clicked();
-    void on_buttonFunction3Loop_clicked();
-    void on_pushButton_10_clicked();
-    void on_pushButton_11_clicked();
+    void create91Request();
+    void Function3Send();
+    void startLoopFunction3();
+    void stopLoopFunction3();
+    void clearTable();
     void on_tabWidget_currentChanged(int index);
     void createRequestOut(bool tr);
     void getRequestAddr();
     void changedInByteExpected();    
-    void showHideTableRow(QLineEdit *r, bool t);
+    void showHideTableRow(QString r, bool t);
+    void ResetAddressInit();
 
     void on_lineAddrShort_textChanged();
     void on_lineAddrLong_textChanged();
-
-    void on_pushButton_2_clicked();
-
-    void on_pushButton_3_clicked();
 
     void on_checkDevice_1_stateChanged();
     void on_checkDevice_2_stateChanged();
@@ -67,7 +65,7 @@ private slots:
     void on_checkDevice_4_stateChanged();
     void on_checkDevice_5_stateChanged();
 
-    void on_buttonFindDevice_clicked();
+    void findDevice();
 
     void on_comboBoxAddress_highlighted(const QString &arg1);
 

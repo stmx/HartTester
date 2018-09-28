@@ -39,6 +39,29 @@ static bool requset5IsSend = 0;
 static int timerSendRequest = 400;
 static int numberRow = 0;
 static QStandardItemModel *model = new QStandardItemModel;
+static QComboBox *comboBoxAddress;
+
+void ResetAddress()
+{
+    comboBoxAddress->clear();
+    comboBoxAddress->addItem("00",0);
+    comboBoxAddress->addItem("01",1);
+    comboBoxAddress->addItem("02",2);
+    comboBoxAddress->addItem("03",3);
+    comboBoxAddress->addItem("04",4);
+    comboBoxAddress->addItem("05",5);
+    comboBoxAddress->addItem("06",6);
+    comboBoxAddress->addItem("07",7);
+    comboBoxAddress->addItem("08",8);
+    comboBoxAddress->addItem("09",9);
+    comboBoxAddress->addItem("0a",10);
+    comboBoxAddress->addItem("0b",11);
+    comboBoxAddress->addItem("0c",12);
+    comboBoxAddress->addItem("0d",13);
+    comboBoxAddress->addItem("0e",14);
+    comboBoxAddress->addItem("0f",15);
+    comboBoxAddress->setCurrentIndex(14);
+}
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -52,6 +75,7 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->setupUi(this);
         ui->buttonClose->setEnabled(false);
         ui->buttonFindDevice->setEnabled(false);
+        ui->buttonFindDeviceFunc3->setEnabled(false);
         ui->buttonSend->setEnabled(!PortOpen);
         ui->checkEnTextBrows->setCheckState(Qt::Checked);
         foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
@@ -82,38 +106,76 @@ MainWindow::MainWindow(QWidget *parent) :
         //ui->comboBoxFunc->addItem("Function 45",45);
         ui->comboBoxFunc->addItem("Function 51",51);
         ui->comboBoxFunc->addItem("Function 91",91);
+
+        comboBoxAddress = ui->comboBoxAddress;
+
         connect(serial, &QSerialPort::readyRead, this, &MainWindow::readData);
         connect(timer, &QTimer::timeout, this, &MainWindow::showTime);
         connect(timerFunction3, &QTimer::timeout, this, &MainWindow::sendTimerRequest);
         connect(timerFunction3Loop, &QTimer::timeout, this, &MainWindow::sendTimerRequestLoop);
         connect(timerFindDevice, &QTimer::timeout, this, &MainWindow::sendFindRequest);
+
+        connect(ui->buttonResetAddr, &QPushButton::clicked,this,&MainWindow::ResetAddressInit);
+        connect(ui->buttonResetAddrFunc3, &QPushButton::clicked,this,&MainWindow::ResetAddressInit);
+        connect(ui->pushButton, &QPushButton::clicked,this,&MainWindow::connectCOM);
+        connect(ui->buttonClose, &QPushButton::clicked,this,&MainWindow::closeCOM);
+        connect(ui->buttonSend, &QPushButton::clicked,this,&MainWindow::sendRequest);
+        connect(ui->buttonClear, &QPushButton::clicked,this,&MainWindow::clearText);
+        connect(ui->buttonTimerStart, &QPushButton::clicked,this,&MainWindow::startLoop);
+        connect(ui->buttonTimerStop, &QPushButton::clicked,this,&MainWindow::stopLoop);
+        connect(ui->pushButton_7, &QPushButton::clicked,this,&MainWindow::create91Request);
+        connect(ui->pushButton_10, &QPushButton::clicked,this,&MainWindow::stopLoopFunction3);
+        connect(ui->pushButton_11, &QPushButton::clicked,this,&MainWindow::clearTable);
+        connect(ui->buttonFindDevice, &QPushButton::clicked,this,&MainWindow::findDevice);
+        connect(ui->buttonFindDeviceFunc3, &QPushButton::clicked,this,&MainWindow::findDevice);
+        connect(ui->buttonFunction3Send, &QPushButton::clicked,this,&MainWindow::Function3Send);
+        connect(ui->buttonFunction3Loop, &QPushButton::clicked,this,&MainWindow::startLoopFunction3);
+
+        ResetAddressInit();
         timer->stop();
         timerFunction3->stop();
         timerFunction3Loop->stop();
         timerFindDevice->stop();
-        ui->comboBoxAddress->addItem("00",0);
-        ui->comboBoxAddress->addItem("01",1);
-        ui->comboBoxAddress->addItem("02",2);
-        ui->comboBoxAddress->addItem("03",3);
-        ui->comboBoxAddress->addItem("04",4);
-        ui->comboBoxAddress->addItem("05",5);
-        ui->comboBoxAddress->addItem("06",6);
-        ui->comboBoxAddress->addItem("07",7);
-        ui->comboBoxAddress->addItem("08",8);
-        ui->comboBoxAddress->addItem("09",9);
-        ui->comboBoxAddress->addItem("0a",10);
-        ui->comboBoxAddress->addItem("0b",11);
-        ui->comboBoxAddress->addItem("0c",12);
-        ui->comboBoxAddress->addItem("0d",13);
-        ui->comboBoxAddress->addItem("0e",14);
-        ui->comboBoxAddress->addItem("0f",15);
-        ui->comboBoxAddress->setCurrentIndex(14);
         getRequestAddr();
     }
 MainWindow::~MainWindow()
 {
     serial->close();
     delete ui;
+}
+void MainWindow::ResetAddressInit()
+{/*
+    switch (ui->tabWidget->currentIndex()) {
+        case 0:
+            comboBoxAddress = ui->comboBoxAddress;
+            ResetAddress();
+        break;
+        case 1:
+            comboBoxAddress = ui->comboBoxAddressFunc3_1;
+            ResetAddress();
+            comboBoxAddress = ui->comboBoxAddressFunc3_2;
+            ResetAddress();
+            comboBoxAddress = ui->comboBoxAddressFunc3_3;
+            ResetAddress();
+            comboBoxAddress = ui->comboBoxAddressFunc3_4;
+            ResetAddress();
+            comboBoxAddress = ui->comboBoxAddressFunc3_5;
+            ResetAddress();
+        break;
+    }*/
+
+    comboBoxAddress = ui->comboBoxAddress;
+    ResetAddress();
+    comboBoxAddress = ui->comboBoxAddressFunc3_1;
+    ResetAddress();
+    comboBoxAddress = ui->comboBoxAddressFunc3_2;
+    ResetAddress();
+    comboBoxAddress = ui->comboBoxAddressFunc3_3;
+    ResetAddress();
+    comboBoxAddress = ui->comboBoxAddressFunc3_4;
+    ResetAddress();
+    comboBoxAddress = ui->comboBoxAddressFunc3_5;
+    ResetAddress();
 }
 void MainWindow::createRequestOut(bool tr = false)
 {
@@ -195,7 +257,7 @@ void MainWindow::changedInByteExpected(){
         break;
     }
 }
-void MainWindow::showHideTableRow(QLineEdit *r, bool t){
+void MainWindow::showHideTableRow(QString r, bool t){
     int numberRow = 0;
     numberRow = model->rowCount();
     if(!t && numberRow != 0)
@@ -203,8 +265,8 @@ void MainWindow::showHideTableRow(QLineEdit *r, bool t){
         for(int i = 0; i<numberRow; i++)
         {
             QString g = model->item(i,0)->text();
-            QString textAddr = r->text();
-            if(g == textAddr && numberRow != 0)
+            //QString textAddr = r->text();
+            if(r == g && numberRow != 0)
             {
                 ui->tableView->hideRow(i);
             }
@@ -216,15 +278,15 @@ void MainWindow::showHideTableRow(QLineEdit *r, bool t){
         for(int i = 0; i<numberRow; i++)
         {
             QString g = model->item(i,0)->text();
-            QString textAddr = r->text();
-            if(g == textAddr)
+            //QString textAddr = r->text();
+            if(r == g)
             {
                 ui->tableView->showRow(i);
             }
         }
     }
 }
-void MainWindow::on_pushButton_clicked()//connect
+void MainWindow::connectCOM()//connect
 {
     serial->open(QSerialPort::ReadWrite);
     if (serial->portName() != ui->comboBox->currentText())
@@ -242,6 +304,7 @@ void MainWindow::on_pushButton_clicked()//connect
         ui->pushButton->setEnabled(false);
         ui->buttonClose->setEnabled(true);
         ui->buttonFindDevice->setEnabled(true);
+        ui->buttonFindDeviceFunc3->setEnabled(true);
         ui->textEdit->setText(" ");
     }
     else {
@@ -249,7 +312,7 @@ void MainWindow::on_pushButton_clicked()//connect
     }
     //serial->setFlowControl(QSerialPort::SoftwareControl);
 }
-void MainWindow::on_buttonClose_clicked()//close
+void MainWindow::closeCOM()//close
 {
     if(serial->isOpen()){
         ui->pushButton->setEnabled(true);
@@ -258,7 +321,7 @@ void MainWindow::on_buttonClose_clicked()//close
     timer->stop();
     serial->close();
 }
-void MainWindow::on_buttonSend_clicked()//send
+void MainWindow::sendRequest()//send
 {
 
     //QThread::msleep(270);
@@ -339,12 +402,17 @@ void MainWindow::readData()//read data
                 for(m=2;m<outText.length();m=m+3){
                     outText = outText.insert(m," ");
                 }
-                if (int(ui->tabWidget->currentIndex())==1) {
+                answer b(nSymAnsGet);
+                b.createAnswer(ansGet,nSymAnsGet);
+                b.analysis();
+                if(b.CrcIsCorrect())
+                {
+                    answerIsGet = true;
+                }
+                if (int(ui->tabWidget->currentIndex())==1 && !timerFindDevice->isActive()) {
                     //text_out->setTextBackgroundColor(QColor(0,0,0));
                     //text_out->setTextColor(QColor(255,255,255));
-                    answer b(nSymAnsGet);
-                    b.createAnswer(ansGet,nSymAnsGet);
-                    b.analysis();
+
                     bool bds;
                     bds = b.CrcIsCorrect();
                     char *zData = new char [int(b.getnDataByte())];
@@ -445,9 +513,6 @@ void MainWindow::readData()//read data
                     text_out->setTextBackgroundColor(QColor(0,0,0));
                     text_out->setTextColor(QColor(255,255,255));
                     //ui->textEdit->insertPlainText(outText+QString(""));
-                    answer b(nSymAnsGet);
-                    b.createAnswer(ansGet,nSymAnsGet);
-                    b.analysis();
                     if(int(ui->tabWidget->currentIndex())==0)
                     {
                         bds = b.CrcIsCorrect();
@@ -462,7 +527,6 @@ void MainWindow::readData()//read data
                             text_out->setTextBackgroundColor(QColor(0,255,0));
                             text_out->setTextColor(QColor(0,0,0));
                             text_out->insertPlainText("CRC Ok");
-                            answerIsGet = true;
                             text_out->setTextBackgroundColor(QColor(255,255,255));
 
                         }
@@ -525,17 +589,17 @@ void MainWindow::readData()//read data
     sb.movePosition(QTextCursor::End);
     ui->textEdit->setTextCursor(sb);
 }
-void MainWindow::on_buttonClear_clicked()//clear
+void MainWindow::clearText()//clear
 {
-    ui->textEdit->setText("");
+    ui->textEdit->clear();
 }
 void MainWindow::showTime(){
     if(!(serial->isOpen())){
         ui->textEdit->setText("Not Open");
     }
-    MainWindow::on_buttonSend_clicked();
+    MainWindow::sendRequest();
 }
-void MainWindow::on_buttonTimerStart_clicked()//timerstart
+void MainWindow::startLoop()//timerstart
 {
     QString tmr2 = ui->lineEdit->text();
     timer->start(tmr2.toInt());
@@ -545,7 +609,7 @@ void MainWindow::on_buttonTimerStart_clicked()//timerstart
         ui->pushButton_7->setEnabled(true);
     }
 }
-void MainWindow::on_buttonTimerStop_clicked()//timer stop
+void MainWindow::stopLoop()//timer stop
 {
     timer->stop();
 }
@@ -602,7 +666,7 @@ void MainWindow::on_comboBoxFunc_currentIndexChanged(int index)//отклик н
             ui->buttonSend->setEnabled(false);
             ui->buttonTimerStart->setEnabled(false);
             ui->pushButton_7->setEnabled(true);
-            on_pushButton_7_clicked();
+            create91Request();
             break;
     }
     changedInByteExpected();
@@ -1559,7 +1623,7 @@ void MainWindow::on_lineFloat_6_textChanged(const QString &arg1)
     ui->lineFloat_6_Byte_3->setText(QByteArray(1,transf.ie[1]).toHex());
     ui->lineFloat_6_Byte_4->setText(QByteArray(1,transf.ie[0]).toHex());
 }
-void MainWindow::on_pushButton_7_clicked()//создание 91 запроса
+void MainWindow::create91Request()//создание 91 запроса
 {
     ui->buttonSend->setEnabled(true);
     ui->buttonTimerStart->setEnabled(true);
@@ -1691,7 +1755,7 @@ void MainWindow::on_pushButton_7_clicked()//создание 91 запроса
     createRequestOut();
     //ui->pushButton_7->setEnabled(false);
 }
-void MainWindow::on_buttonFunction3Send_clicked()//send Function3
+void MainWindow::Function3Send()//send Function3
 {
     if(ui->checkDevice_1->checkState()){
         requset1IsSend = true;
@@ -1731,10 +1795,10 @@ void MainWindow::on_buttonFunction3Send_clicked()//send Function3
         }
     }
 }
-void MainWindow::on_buttonFunction3Loop_clicked()
+void MainWindow::startLoopFunction3()
 {
     int pLo = 1;
-    MainWindow::on_buttonFunction3Send_clicked();
+    MainWindow::Function3Send();
     if(ui->checkDevice_1->checkState()){
         pLo++;
     }
@@ -1752,13 +1816,12 @@ void MainWindow::on_buttonFunction3Loop_clicked()
     }
     timerFunction3Loop->start(pLo*timerSendRequest);
 }
-void MainWindow::on_pushButton_10_clicked()
+void MainWindow::stopLoopFunction3()
 {
     timerFunction3Loop->stop();
 }
-void MainWindow::on_pushButton_11_clicked()
+void MainWindow::clearTable()
 {
-    //ui->textEditFunction3->clear();
     model->clear();
     numberRow = 0;
 }
@@ -1782,12 +1845,13 @@ void MainWindow::on_lineAddrLong_textChanged()
 }
 void MainWindow::sendTimerRequest()
 {
+    ui->comboBoxAddressFunc3_1->currentText();
     bool fsend = false;
     if(ui->checkDevice_1->checkState() && !fsend && requset1IsSend)
     {
         if(!ui->checkLongFrame->checkState())
         {
-            QString textAddr = ui->lineFunc3Addr_1->text();
+            QString textAddr = ui->comboBoxAddressFunc3_1->currentText();;
             if(textAddr.length() == 2){
                 QByteArray text =QByteArray(textAddr.toLocal8Bit());
                 text.remove(2,1);
@@ -1796,7 +1860,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::on_buttonSend_clicked();
+        MainWindow::sendRequest();
         requset1IsSend = false;
         fsend = true;
     }
@@ -1804,7 +1868,7 @@ void MainWindow::sendTimerRequest()
     {
         if(!ui->checkLongFrame->checkState())
         {
-            QString textAddr = ui->lineFunc3Addr_2->text();
+            QString textAddr = ui->comboBoxAddressFunc3_2->currentText();;
             if(textAddr.length() == 2){
                 QByteArray text =QByteArray(textAddr.toLocal8Bit());
                 text.remove(2,1);
@@ -1813,7 +1877,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::on_buttonSend_clicked();
+        MainWindow::sendRequest();
         requset2IsSend = false;
         fsend = true;
     }
@@ -1821,7 +1885,7 @@ void MainWindow::sendTimerRequest()
     {
         if(!ui->checkLongFrame->checkState())
         {
-            QString textAddr = ui->lineFunc3Addr_3->text();
+            QString textAddr = ui->comboBoxAddressFunc3_3->currentText();;
             if(textAddr.length() == 2){
                 QByteArray text =QByteArray(textAddr.toLocal8Bit());
                 text.remove(2,1);
@@ -1830,7 +1894,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::on_buttonSend_clicked();
+        MainWindow::sendRequest();
         requset3IsSend = false;
         fsend = true;
     }
@@ -1838,7 +1902,7 @@ void MainWindow::sendTimerRequest()
     {
         if(!ui->checkLongFrame->checkState())
         {
-            QString textAddr = ui->lineFunc3Addr_4->text();
+            QString textAddr = ui->comboBoxAddressFunc3_4->currentText();;
             if(textAddr.length() == 2){
                 QByteArray text =QByteArray(textAddr.toLocal8Bit());
                 text.remove(2,1);
@@ -1847,7 +1911,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::on_buttonSend_clicked();
+        MainWindow::sendRequest();
         requset4IsSend = false;
         fsend = true;
     }
@@ -1855,7 +1919,7 @@ void MainWindow::sendTimerRequest()
     {
         if(!ui->checkLongFrame->checkState())
         {
-            QString textAddr = ui->lineFunc3Addr_5->text();
+            QString textAddr = ui->comboBoxAddressFunc3_5->currentText();;
             if(textAddr.length() == 2){
                 QByteArray text =QByteArray(textAddr.toLocal8Bit());
                 text.remove(2,1);
@@ -1864,7 +1928,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::on_buttonSend_clicked();
+        MainWindow::sendRequest();
         requset5IsSend = false;
         fsend = true;
     }
@@ -1877,55 +1941,56 @@ void MainWindow::sendTimerRequest()
     }
 }
 void MainWindow::sendTimerRequestLoop(){
-    MainWindow::on_buttonFunction3Send_clicked();
-}
-
-void MainWindow::on_pushButton_2_clicked()
-{
-    ui->tableView->hideRow(2);
-    ui->tableView->hideRow(4);
-}
-
-void MainWindow::on_pushButton_3_clicked()
-{
-    ui->tableView->showRow(2);
-    ui->tableView->showRow(4);
+    MainWindow::Function3Send();
 }
 
 void MainWindow::on_checkDevice_1_stateChanged()
 {
-    showHideTableRow(ui->lineFunc3Addr_1, ui->checkDevice_1->checkState());
+    showHideTableRow(ui->comboBoxAddressFunc3_1->currentText(), ui->checkDevice_1->checkState());
 }
 
 void MainWindow::on_checkDevice_2_stateChanged()
 {
-    showHideTableRow(ui->lineFunc3Addr_2, ui->checkDevice_2->checkState());
+    showHideTableRow(ui->comboBoxAddressFunc3_2->currentText(), ui->checkDevice_2->checkState());
 }
 
 void MainWindow::on_checkDevice_3_stateChanged()
 {
-    showHideTableRow(ui->lineFunc3Addr_3, ui->checkDevice_3->checkState());
+    showHideTableRow(ui->comboBoxAddressFunc3_3->currentText(), ui->checkDevice_3->checkState());
 }
 
 void MainWindow::on_checkDevice_4_stateChanged()
 {
-    showHideTableRow(ui->lineFunc3Addr_4, ui->checkDevice_4->checkState());
+    showHideTableRow(ui->comboBoxAddressFunc3_4->currentText(), ui->checkDevice_4->checkState());
 }
 
 void MainWindow::on_checkDevice_5_stateChanged()
 {
-    showHideTableRow(ui->lineFunc3Addr_5, ui->checkDevice_5->checkState());
+    showHideTableRow(ui->comboBoxAddressFunc3_5->currentText(), ui->checkDevice_5->checkState());
 }
 
-void MainWindow::on_buttonFindDevice_clicked()//запуск таймера на поиск
+void MainWindow::findDevice()//запуск таймера на поиск
 {
 
+    ui->comboBoxFunc->setCurrentIndex(0);
     ReqAddr[0] = 0x00;
     ui->comboBoxAddress->clear();
+    ui->comboBoxAddressFunc3_1->clear();
+    ui->comboBoxAddressFunc3_2->clear();
+    ui->comboBoxAddressFunc3_3->clear();
+    ui->comboBoxAddressFunc3_4->clear();
+    ui->comboBoxAddressFunc3_5->clear();
     ui->buttonSend->setEnabled(false);
+    ui->buttonFunction3Send->setEnabled(false);
     ui->buttonTimerStart->setEnabled(false);
+    ui->buttonFunction3Loop->setEnabled(false);
     ui->comboBoxAddress->setEnabled(false);
-    timerFindDevice->start(1000);
+    ui->comboBoxAddressFunc3_1->setEnabled(false);
+    ui->comboBoxAddressFunc3_2->setEnabled(false);
+    ui->comboBoxAddressFunc3_3->setEnabled(false);
+    ui->comboBoxAddressFunc3_4->setEnabled(false);
+    ui->comboBoxAddressFunc3_5->setEnabled(false);
+    timerFindDevice->start(400);
 
     request a;
     a.setLongFrame(0);
@@ -1939,23 +2004,38 @@ void MainWindow::on_buttonFindDevice_clicked()//запуск таймера на
         req.insert(i,' ');
     }
     ui->lineRequest->setText(req);
-    on_buttonSend_clicked();
+    sendRequest();
+    //inBytesExpected = int(ui->spinBox->value())+19+2*int(ui->checkLongFrame->checkState());
 }
 
 void MainWindow::sendFindRequest()//создание запроса на поиск
 {
+    ui->comboBoxFunc->setCurrentIndex(0);
     if(answerIsGet)
     {
         QByteArray outText2 = QByteArray(1,ReqAddr[0]).toHex();
         ui->comboBoxAddress->addItem(QString(outText2));
+        ui->comboBoxAddressFunc3_1->addItem(QString(outText2));
+        ui->comboBoxAddressFunc3_2->addItem(QString(outText2));
+        ui->comboBoxAddressFunc3_3->addItem(QString(outText2));
+        ui->comboBoxAddressFunc3_4->addItem(QString(outText2));
+        ui->comboBoxAddressFunc3_5->addItem(QString(outText2));
     }
     ReqAddr[0]++;
     if(ReqAddr[0] == 0x10)
     {
         timerFindDevice->stop();
+        ui->comboBoxFunc->setCurrentIndex(1);
         ui->buttonSend->setEnabled(true);
+        ui->buttonFunction3Send->setEnabled(true);
         ui->buttonTimerStart->setEnabled(true);
+        ui->buttonFunction3Loop->setEnabled(true);
         ui->comboBoxAddress->setEnabled(true);
+        ui->comboBoxAddressFunc3_1->setEnabled(true);
+        ui->comboBoxAddressFunc3_2->setEnabled(true);
+        ui->comboBoxAddressFunc3_3->setEnabled(true);
+        ui->comboBoxAddressFunc3_4->setEnabled(true);
+        ui->comboBoxAddressFunc3_5->setEnabled(true);
         ui->textEdit->clear();
         getRequestAddr();
     }else
@@ -1972,7 +2052,7 @@ void MainWindow::sendFindRequest()//создание запроса на пои�
             req.insert(i,' ');
         }
         ui->lineRequest->setText(req);
-        on_buttonSend_clicked();
+        sendRequest();
     }
 }
 
