@@ -39,25 +39,27 @@ static bool requset5IsSend = 0;
 static int timerSendRequest = 400;
 static int numberRow = 0;
 static QStandardItemModel *model = new QStandardItemModel;
+static QComboBox *comboBoxAddress;
 
-void ResetAddress(QComboBox *trim){
-    trim->addItem("00",0);
-    trim->addItem("01",1);
-    trim->addItem("02",2);
-    trim->addItem("03",3);
-    trim->addItem("04",4);
-    trim->addItem("05",5);
-    trim->addItem("06",6);
-    trim->addItem("07",7);
-    trim->addItem("08",8);
-    trim->addItem("09",9);
-    trim->addItem("0a",10);
-    trim->addItem("0b",11);
-    trim->addItem("0c",12);
-    trim->addItem("0d",13);
-    trim->addItem("0e",14);
-    trim->addItem("0f",15);
-    trim->setCurrentIndex(14);
+void ResetAddress()
+{
+    comboBoxAddress->addItem("00",0);
+    comboBoxAddress->addItem("01",1);
+    comboBoxAddress->addItem("02",2);
+    comboBoxAddress->addItem("03",3);
+    comboBoxAddress->addItem("04",4);
+    comboBoxAddress->addItem("05",5);
+    comboBoxAddress->addItem("06",6);
+    comboBoxAddress->addItem("07",7);
+    comboBoxAddress->addItem("08",8);
+    comboBoxAddress->addItem("09",9);
+    comboBoxAddress->addItem("0a",10);
+    comboBoxAddress->addItem("0b",11);
+    comboBoxAddress->addItem("0c",12);
+    comboBoxAddress->addItem("0d",13);
+    comboBoxAddress->addItem("0e",14);
+    comboBoxAddress->addItem("0f",15);
+    comboBoxAddress->setCurrentIndex(14);
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -72,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->setupUi(this);
         ui->buttonClose->setEnabled(false);
         ui->buttonFindDevice->setEnabled(false);
+        ui->buttonFindDeviceFunc3->setEnabled(false);
         ui->buttonSend->setEnabled(!PortOpen);
         ui->checkEnTextBrows->setCheckState(Qt::Checked);
         foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
@@ -103,7 +106,7 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->comboBoxFunc->addItem("Function 51",51);
         ui->comboBoxFunc->addItem("Function 91",91);
 
-        QComboBox *comboBoxAddress = ui->comboBoxAddress;
+        comboBoxAddress = ui->comboBoxAddress;
 
         connect(serial, &QSerialPort::readyRead, this, &MainWindow::readData);
         connect(timer, &QTimer::timeout, this, &MainWindow::showTime);
@@ -112,6 +115,7 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(timerFindDevice, &QTimer::timeout, this, &MainWindow::sendFindRequest);
 
         connect(ui->buttonResetAddr, &QPushButton::clicked,this,&MainWindow::ResetAddressInit);
+        connect(ui->buttonResetAddrFunc3, &QPushButton::clicked,this,&MainWindow::ResetAddressInit);
         connect(ui->pushButton, &QPushButton::clicked,this,&MainWindow::connectCOM);
         connect(ui->buttonClose, &QPushButton::clicked,this,&MainWindow::closeCOM);
         connect(ui->buttonSend, &QPushButton::clicked,this,&MainWindow::sendRequest);
@@ -122,10 +126,11 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(ui->pushButton_10, &QPushButton::clicked,this,&MainWindow::stopLoopFunction3);
         connect(ui->pushButton_11, &QPushButton::clicked,this,&MainWindow::clearTable);
         connect(ui->buttonFindDevice, &QPushButton::clicked,this,&MainWindow::findDevice);
+        connect(ui->buttonFindDeviceFunc3, &QPushButton::clicked,this,&MainWindow::findDevice);
         connect(ui->buttonFunction3Send, &QPushButton::clicked,this,&MainWindow::Function3Send);
         connect(ui->buttonFunction3Loop, &QPushButton::clicked,this,&MainWindow::startLoopFunction3);
 
-
+        ResetAddressInit();
         timer->stop();
         timerFunction3->stop();
         timerFunction3Loop->stop();
@@ -139,8 +144,25 @@ MainWindow::~MainWindow()
 }
 void MainWindow::ResetAddressInit()
 {
-    QComboBox *comboBoxAddress = ui->comboBoxAddress;
-    ResetAddress(comboBoxAddress);
+
+    switch (ui->tabWidget->currentIndex()) {
+        case 0:
+            comboBoxAddress = ui->comboBoxAddress;
+            ResetAddress();
+        break;
+        case 1:
+            comboBoxAddress = ui->comboBoxAddressFunc3_1;
+            ResetAddress();
+            comboBoxAddress = ui->comboBoxAddressFunc3_2;
+            ResetAddress();
+            comboBoxAddress = ui->comboBoxAddressFunc3_3;
+            ResetAddress();
+            comboBoxAddress = ui->comboBoxAddressFunc3_4;
+            ResetAddress();
+            comboBoxAddress = ui->comboBoxAddressFunc3_5;
+            ResetAddress();
+        break;
+    }
 }
 
 void MainWindow::createRequestOut(bool tr = false)
@@ -270,6 +292,7 @@ void MainWindow::connectCOM()//connect
         ui->pushButton->setEnabled(false);
         ui->buttonClose->setEnabled(true);
         ui->buttonFindDevice->setEnabled(true);
+        ui->buttonFindDeviceFunc3->setEnabled(true);
         ui->textEdit->setText(" ");
     }
     else {
@@ -1935,12 +1958,18 @@ void MainWindow::on_checkDevice_5_stateChanged()
 void MainWindow::findDevice()//запуск таймера на поиск
 {
 
+    ui->comboBoxFunc->setCurrentIndex(0);
     ReqAddr[0] = 0x00;
     ui->comboBoxAddress->clear();
+    ui->comboBoxAddressFunc3_1->clear();
+    ui->comboBoxAddressFunc3_2->clear();
+    ui->comboBoxAddressFunc3_3->clear();
+    ui->comboBoxAddressFunc3_4->clear();
+    ui->comboBoxAddressFunc3_5->clear();
     ui->buttonSend->setEnabled(false);
     ui->buttonTimerStart->setEnabled(false);
     ui->comboBoxAddress->setEnabled(false);
-    timerFindDevice->start(1000);
+    timerFindDevice->start(400);
 
     request a;
     a.setLongFrame(0);
@@ -1955,6 +1984,7 @@ void MainWindow::findDevice()//запуск таймера на поиск
     }
     ui->lineRequest->setText(req);
     sendRequest();
+    //inBytesExpected = int(ui->spinBox->value())+19+2*int(ui->checkLongFrame->checkState());
 }
 
 void MainWindow::sendFindRequest()//создание запроса на поиск
@@ -1963,11 +1993,17 @@ void MainWindow::sendFindRequest()//создание запроса на пои�
     {
         QByteArray outText2 = QByteArray(1,ReqAddr[0]).toHex();
         ui->comboBoxAddress->addItem(QString(outText2));
+        ui->comboBoxAddressFunc3_1->addItem(QString(outText2));
+        ui->comboBoxAddressFunc3_2->addItem(QString(outText2));
+        ui->comboBoxAddressFunc3_3->addItem(QString(outText2));
+        ui->comboBoxAddressFunc3_4->addItem(QString(outText2));
+        ui->comboBoxAddressFunc3_5->addItem(QString(outText2));
     }
     ReqAddr[0]++;
     if(ReqAddr[0] == 0x10)
     {
         timerFindDevice->stop();
+        ui->comboBoxFunc->setCurrentIndex(1);
         ui->buttonSend->setEnabled(true);
         ui->buttonTimerStart->setEnabled(true);
         ui->comboBoxAddress->setEnabled(true);
