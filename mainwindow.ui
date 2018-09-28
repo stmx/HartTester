@@ -1009,8 +1009,8 @@
       </property>
       <property name="geometry">
        <rect>
-        <x>690</x>
-        <y>30</y>
+        <x>280</x>
+        <y>340</y>
         <width>81</width>
         <height>20</height>
        </rect>
@@ -1028,8 +1028,8 @@
       </property>
       <property name="geometry">
        <rect>
-        <x>690</x>
-        <y>10</y>
+        <x>430</x>
+        <y>340</y>
         <width>81</width>
         <height>20</height>
        </rect>
@@ -1053,8 +1053,8 @@
       </property>
       <property name="geometry">
        <rect>
-        <x>610</x>
-        <y>30</y>
+        <x>200</x>
+        <y>340</y>
         <width>81</width>
         <height>16</height>
        </rect>
@@ -1069,8 +1069,8 @@
       </property>
       <property name="geometry">
        <rect>
-        <x>610</x>
-        <y>10</y>
+        <x>360</x>
+        <y>340</y>
         <width>81</width>
         <height>16</height>
        </rect>
@@ -1085,10 +1085,10 @@
       </property>
       <property name="geometry">
        <rect>
-        <x>732</x>
-        <y>50</y>
-        <width>41</width>
-        <height>22</height>
+        <x>610</x>
+        <y>60</y>
+        <width>131</width>
+        <height>21</height>
        </rect>
       </property>
       <property name="text">
@@ -1098,11 +1098,24 @@
      <widget class="QComboBox" name="comboBoxAddress">
       <property name="geometry">
        <rect>
-        <x>690</x>
-        <y>50</y>
+        <x>610</x>
+        <y>30</y>
         <width>41</width>
         <height>22</height>
        </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="buttonResetAddr">
+      <property name="geometry">
+       <rect>
+        <x>660</x>
+        <y>30</y>
+        <width>81</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Reset address</string>
       </property>
      </widget>
     </widget>
