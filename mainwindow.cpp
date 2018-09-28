@@ -40,6 +40,26 @@ static int timerSendRequest = 400;
 static int numberRow = 0;
 static QStandardItemModel *model = new QStandardItemModel;
 
+void ResetAddress(QComboBox *trim){
+    trim->addItem("00",0);
+    trim->addItem("01",1);
+    trim->addItem("02",2);
+    trim->addItem("03",3);
+    trim->addItem("04",4);
+    trim->addItem("05",5);
+    trim->addItem("06",6);
+    trim->addItem("07",7);
+    trim->addItem("08",8);
+    trim->addItem("09",9);
+    trim->addItem("0a",10);
+    trim->addItem("0b",11);
+    trim->addItem("0c",12);
+    trim->addItem("0d",13);
+    trim->addItem("0e",14);
+    trim->addItem("0f",15);
+    trim->setCurrentIndex(14);
+}
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -82,32 +102,34 @@ MainWindow::MainWindow(QWidget *parent) :
         //ui->comboBoxFunc->addItem("Function 45",45);
         ui->comboBoxFunc->addItem("Function 51",51);
         ui->comboBoxFunc->addItem("Function 91",91);
+
+        QComboBox *comboBoxAddress = ui->comboBoxAddress;
+
         connect(serial, &QSerialPort::readyRead, this, &MainWindow::readData);
         connect(timer, &QTimer::timeout, this, &MainWindow::showTime);
         connect(timerFunction3, &QTimer::timeout, this, &MainWindow::sendTimerRequest);
         connect(timerFunction3Loop, &QTimer::timeout, this, &MainWindow::sendTimerRequestLoop);
         connect(timerFindDevice, &QTimer::timeout, this, &MainWindow::sendFindRequest);
+
+        connect(ui->buttonResetAddr, &QPushButton::clicked,this,&MainWindow::ResetAddressInit);
+        connect(ui->pushButton, &QPushButton::clicked,this,&MainWindow::connectCOM);
+        connect(ui->buttonClose, &QPushButton::clicked,this,&MainWindow::closeCOM);
+        connect(ui->buttonSend, &QPushButton::clicked,this,&MainWindow::sendRequest);
+        connect(ui->buttonClear, &QPushButton::clicked,this,&MainWindow::clearText);
+        connect(ui->buttonTimerStart, &QPushButton::clicked,this,&MainWindow::startLoop);
+        connect(ui->buttonTimerStop, &QPushButton::clicked,this,&MainWindow::stopLoop);
+        connect(ui->pushButton_7, &QPushButton::clicked,this,&MainWindow::create91Request);
+        connect(ui->pushButton_10, &QPushButton::clicked,this,&MainWindow::stopLoopFunction3);
+        connect(ui->pushButton_11, &QPushButton::clicked,this,&MainWindow::clearTable);
+        connect(ui->buttonFindDevice, &QPushButton::clicked,this,&MainWindow::findDevice);
+        connect(ui->buttonFunction3Send, &QPushButton::clicked,this,&MainWindow::Function3Send);
+        connect(ui->buttonFunction3Loop, &QPushButton::clicked,this,&MainWindow::startLoopFunction3);
+
+
         timer->stop();
         timerFunction3->stop();
         timerFunction3Loop->stop();
         timerFindDevice->stop();
-        ui->comboBoxAddress->addItem("00",0);
-        ui->comboBoxAddress->addItem("01",1);
-        ui->comboBoxAddress->addItem("02",2);
-        ui->comboBoxAddress->addItem("03",3);
-        ui->comboBoxAddress->addItem("04",4);
-        ui->comboBoxAddress->addItem("05",5);
-        ui->comboBoxAddress->addItem("06",6);
-        ui->comboBoxAddress->addItem("07",7);
-        ui->comboBoxAddress->addItem("08",8);
-        ui->comboBoxAddress->addItem("09",9);
-        ui->comboBoxAddress->addItem("0a",10);
-        ui->comboBoxAddress->addItem("0b",11);
-        ui->comboBoxAddress->addItem("0c",12);
-        ui->comboBoxAddress->addItem("0d",13);
-        ui->comboBoxAddress->addItem("0e",14);
-        ui->comboBoxAddress->addItem("0f",15);
-        ui->comboBoxAddress->setCurrentIndex(14);
         getRequestAddr();
     }
 MainWindow::~MainWindow()
@@ -115,6 +137,12 @@ MainWindow::~MainWindow()
     serial->close();
     delete ui;
 }
+void MainWindow::ResetAddressInit()
+{
+    QComboBox *comboBoxAddress = ui->comboBoxAddress;
+    ResetAddress(comboBoxAddress);
+}
+
 void MainWindow::createRequestOut(bool tr = false)
 {
     request a;
@@ -224,7 +252,7 @@ void MainWindow::showHideTableRow(QLineEdit *r, bool t){
         }
     }
 }
-void MainWindow::on_pushButton_clicked()//connect
+void MainWindow::connectCOM()//connect
 {
     serial->open(QSerialPort::ReadWrite);
     if (serial->portName() != ui->comboBox->currentText())
@@ -249,7 +277,7 @@ void MainWindow::on_pushButton_clicked()//connect
     }
     //serial->setFlowControl(QSerialPort::SoftwareControl);
 }
-void MainWindow::on_buttonClose_clicked()//close
+void MainWindow::closeCOM()//close
 {
     if(serial->isOpen()){
         ui->pushButton->setEnabled(true);
@@ -258,7 +286,7 @@ void MainWindow::on_buttonClose_clicked()//close
     timer->stop();
     serial->close();
 }
-void MainWindow::on_buttonSend_clicked()//send
+void MainWindow::sendRequest()//send
 {
 
     //QThread::msleep(270);
@@ -525,17 +553,17 @@ void MainWindow::readData()//read data
     sb.movePosition(QTextCursor::End);
     ui->textEdit->setTextCursor(sb);
 }
-void MainWindow::on_buttonClear_clicked()//clear
+void MainWindow::clearText()//clear
 {
-    ui->textEdit->setText("");
+    ui->textEdit->clear();
 }
 void MainWindow::showTime(){
     if(!(serial->isOpen())){
         ui->textEdit->setText("Not Open");
     }
-    MainWindow::on_buttonSend_clicked();
+    MainWindow::sendRequest();
 }
-void MainWindow::on_buttonTimerStart_clicked()//timerstart
+void MainWindow::startLoop()//timerstart
 {
     QString tmr2 = ui->lineEdit->text();
     timer->start(tmr2.toInt());
@@ -545,7 +573,7 @@ void MainWindow::on_buttonTimerStart_clicked()//timerstart
         ui->pushButton_7->setEnabled(true);
     }
 }
-void MainWindow::on_buttonTimerStop_clicked()//timer stop
+void MainWindow::stopLoop()//timer stop
 {
     timer->stop();
 }
@@ -602,7 +630,7 @@ void MainWindow::on_comboBoxFunc_currentIndexChanged(int index)//отклик н
             ui->buttonSend->setEnabled(false);
             ui->buttonTimerStart->setEnabled(false);
             ui->pushButton_7->setEnabled(true);
-            on_pushButton_7_clicked();
+            create91Request();
             break;
     }
     changedInByteExpected();
@@ -1559,7 +1587,7 @@ void MainWindow::on_lineFloat_6_textChanged(const QString &arg1)
     ui->lineFloat_6_Byte_3->setText(QByteArray(1,transf.ie[1]).toHex());
     ui->lineFloat_6_Byte_4->setText(QByteArray(1,transf.ie[0]).toHex());
 }
-void MainWindow::on_pushButton_7_clicked()//создание 91 запроса
+void MainWindow::create91Request()//создание 91 запроса
 {
     ui->buttonSend->setEnabled(true);
     ui->buttonTimerStart->setEnabled(true);
@@ -1691,7 +1719,7 @@ void MainWindow::on_pushButton_7_clicked()//создание 91 запроса
     createRequestOut();
     //ui->pushButton_7->setEnabled(false);
 }
-void MainWindow::on_buttonFunction3Send_clicked()//send Function3
+void MainWindow::Function3Send()//send Function3
 {
     if(ui->checkDevice_1->checkState()){
         requset1IsSend = true;
@@ -1731,10 +1759,10 @@ void MainWindow::on_buttonFunction3Send_clicked()//send Function3
         }
     }
 }
-void MainWindow::on_buttonFunction3Loop_clicked()
+void MainWindow::startLoopFunction3()
 {
     int pLo = 1;
-    MainWindow::on_buttonFunction3Send_clicked();
+    MainWindow::Function3Send();
     if(ui->checkDevice_1->checkState()){
         pLo++;
     }
@@ -1752,13 +1780,12 @@ void MainWindow::on_buttonFunction3Loop_clicked()
     }
     timerFunction3Loop->start(pLo*timerSendRequest);
 }
-void MainWindow::on_pushButton_10_clicked()
+void MainWindow::stopLoopFunction3()
 {
     timerFunction3Loop->stop();
 }
-void MainWindow::on_pushButton_11_clicked()
+void MainWindow::clearTable()
 {
-    //ui->textEditFunction3->clear();
     model->clear();
     numberRow = 0;
 }
@@ -1796,7 +1823,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::on_buttonSend_clicked();
+        MainWindow::sendRequest();
         requset1IsSend = false;
         fsend = true;
     }
@@ -1813,7 +1840,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::on_buttonSend_clicked();
+        MainWindow::sendRequest();
         requset2IsSend = false;
         fsend = true;
     }
@@ -1830,7 +1857,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::on_buttonSend_clicked();
+        MainWindow::sendRequest();
         requset3IsSend = false;
         fsend = true;
     }
@@ -1847,7 +1874,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::on_buttonSend_clicked();
+        MainWindow::sendRequest();
         requset4IsSend = false;
         fsend = true;
     }
@@ -1864,7 +1891,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::on_buttonSend_clicked();
+        MainWindow::sendRequest();
         requset5IsSend = false;
         fsend = true;
     }
@@ -1877,19 +1904,7 @@ void MainWindow::sendTimerRequest()
     }
 }
 void MainWindow::sendTimerRequestLoop(){
-    MainWindow::on_buttonFunction3Send_clicked();
-}
-
-void MainWindow::on_pushButton_2_clicked()
-{
-    ui->tableView->hideRow(2);
-    ui->tableView->hideRow(4);
-}
-
-void MainWindow::on_pushButton_3_clicked()
-{
-    ui->tableView->showRow(2);
-    ui->tableView->showRow(4);
+    MainWindow::Function3Send();
 }
 
 void MainWindow::on_checkDevice_1_stateChanged()
@@ -1917,7 +1932,7 @@ void MainWindow::on_checkDevice_5_stateChanged()
     showHideTableRow(ui->lineFunc3Addr_5, ui->checkDevice_5->checkState());
 }
 
-void MainWindow::on_buttonFindDevice_clicked()//запуск таймера на поиск
+void MainWindow::findDevice()//запуск таймера на поиск
 {
 
     ReqAddr[0] = 0x00;
@@ -1939,7 +1954,7 @@ void MainWindow::on_buttonFindDevice_clicked()//запуск таймера на
         req.insert(i,' ');
     }
     ui->lineRequest->setText(req);
-    on_buttonSend_clicked();
+    sendRequest();
 }
 
 void MainWindow::sendFindRequest()//создание запроса на поиск
@@ -1972,7 +1987,7 @@ void MainWindow::sendFindRequest()//создание запроса на пои�
             req.insert(i,' ');
         }
         ui->lineRequest->setText(req);
-        on_buttonSend_clicked();
+        sendRequest();
     }
 }
 
