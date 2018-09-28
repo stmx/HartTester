@@ -43,6 +43,7 @@ static QComboBox *comboBoxAddress;
 
 void ResetAddress()
 {
+    comboBoxAddress->clear();
     comboBoxAddress->addItem("00",0);
     comboBoxAddress->addItem("01",1);
     comboBoxAddress->addItem("02",2);
@@ -143,8 +144,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 void MainWindow::ResetAddressInit()
-{
-
+{/*
     switch (ui->tabWidget->currentIndex()) {
         case 0:
             comboBoxAddress = ui->comboBoxAddress;
@@ -162,9 +162,21 @@ void MainWindow::ResetAddressInit()
             comboBoxAddress = ui->comboBoxAddressFunc3_5;
             ResetAddress();
         break;
-    }
-}
+    }*/
 
+    comboBoxAddress = ui->comboBoxAddress;
+    ResetAddress();
+    comboBoxAddress = ui->comboBoxAddressFunc3_1;
+    ResetAddress();
+    comboBoxAddress = ui->comboBoxAddressFunc3_2;
+    ResetAddress();
+    comboBoxAddress = ui->comboBoxAddressFunc3_3;
+    ResetAddress();
+    comboBoxAddress = ui->comboBoxAddressFunc3_4;
+    ResetAddress();
+    comboBoxAddress = ui->comboBoxAddressFunc3_5;
+    ResetAddress();
+}
 void MainWindow::createRequestOut(bool tr = false)
 {
     request a;
@@ -245,7 +257,7 @@ void MainWindow::changedInByteExpected(){
         break;
     }
 }
-void MainWindow::showHideTableRow(QLineEdit *r, bool t){
+void MainWindow::showHideTableRow(QString r, bool t){
     int numberRow = 0;
     numberRow = model->rowCount();
     if(!t && numberRow != 0)
@@ -253,8 +265,8 @@ void MainWindow::showHideTableRow(QLineEdit *r, bool t){
         for(int i = 0; i<numberRow; i++)
         {
             QString g = model->item(i,0)->text();
-            QString textAddr = r->text();
-            if(g == textAddr && numberRow != 0)
+            //QString textAddr = r->text();
+            if(r == g && numberRow != 0)
             {
                 ui->tableView->hideRow(i);
             }
@@ -266,8 +278,8 @@ void MainWindow::showHideTableRow(QLineEdit *r, bool t){
         for(int i = 0; i<numberRow; i++)
         {
             QString g = model->item(i,0)->text();
-            QString textAddr = r->text();
-            if(g == textAddr)
+            //QString textAddr = r->text();
+            if(r == g)
             {
                 ui->tableView->showRow(i);
             }
@@ -390,12 +402,17 @@ void MainWindow::readData()//read data
                 for(m=2;m<outText.length();m=m+3){
                     outText = outText.insert(m," ");
                 }
-                if (int(ui->tabWidget->currentIndex())==1) {
+                answer b(nSymAnsGet);
+                b.createAnswer(ansGet,nSymAnsGet);
+                b.analysis();
+                if(b.CrcIsCorrect())
+                {
+                    answerIsGet = true;
+                }
+                if (int(ui->tabWidget->currentIndex())==1 && !timerFindDevice->isActive()) {
                     //text_out->setTextBackgroundColor(QColor(0,0,0));
                     //text_out->setTextColor(QColor(255,255,255));
-                    answer b(nSymAnsGet);
-                    b.createAnswer(ansGet,nSymAnsGet);
-                    b.analysis();
+
                     bool bds;
                     bds = b.CrcIsCorrect();
                     char *zData = new char [int(b.getnDataByte())];
@@ -496,9 +513,6 @@ void MainWindow::readData()//read data
                     text_out->setTextBackgroundColor(QColor(0,0,0));
                     text_out->setTextColor(QColor(255,255,255));
                     //ui->textEdit->insertPlainText(outText+QString(""));
-                    answer b(nSymAnsGet);
-                    b.createAnswer(ansGet,nSymAnsGet);
-                    b.analysis();
                     if(int(ui->tabWidget->currentIndex())==0)
                     {
                         bds = b.CrcIsCorrect();
@@ -513,7 +527,6 @@ void MainWindow::readData()//read data
                             text_out->setTextBackgroundColor(QColor(0,255,0));
                             text_out->setTextColor(QColor(0,0,0));
                             text_out->insertPlainText("CRC Ok");
-                            answerIsGet = true;
                             text_out->setTextBackgroundColor(QColor(255,255,255));
 
                         }
@@ -1832,12 +1845,13 @@ void MainWindow::on_lineAddrLong_textChanged()
 }
 void MainWindow::sendTimerRequest()
 {
+    ui->comboBoxAddressFunc3_1->currentText();
     bool fsend = false;
     if(ui->checkDevice_1->checkState() && !fsend && requset1IsSend)
     {
         if(!ui->checkLongFrame->checkState())
         {
-            QString textAddr = ui->lineFunc3Addr_1->text();
+            QString textAddr = ui->comboBoxAddressFunc3_1->currentText();;
             if(textAddr.length() == 2){
                 QByteArray text =QByteArray(textAddr.toLocal8Bit());
                 text.remove(2,1);
@@ -1854,7 +1868,7 @@ void MainWindow::sendTimerRequest()
     {
         if(!ui->checkLongFrame->checkState())
         {
-            QString textAddr = ui->lineFunc3Addr_2->text();
+            QString textAddr = ui->comboBoxAddressFunc3_2->currentText();;
             if(textAddr.length() == 2){
                 QByteArray text =QByteArray(textAddr.toLocal8Bit());
                 text.remove(2,1);
@@ -1871,7 +1885,7 @@ void MainWindow::sendTimerRequest()
     {
         if(!ui->checkLongFrame->checkState())
         {
-            QString textAddr = ui->lineFunc3Addr_3->text();
+            QString textAddr = ui->comboBoxAddressFunc3_3->currentText();;
             if(textAddr.length() == 2){
                 QByteArray text =QByteArray(textAddr.toLocal8Bit());
                 text.remove(2,1);
@@ -1888,7 +1902,7 @@ void MainWindow::sendTimerRequest()
     {
         if(!ui->checkLongFrame->checkState())
         {
-            QString textAddr = ui->lineFunc3Addr_4->text();
+            QString textAddr = ui->comboBoxAddressFunc3_4->currentText();;
             if(textAddr.length() == 2){
                 QByteArray text =QByteArray(textAddr.toLocal8Bit());
                 text.remove(2,1);
@@ -1905,7 +1919,7 @@ void MainWindow::sendTimerRequest()
     {
         if(!ui->checkLongFrame->checkState())
         {
-            QString textAddr = ui->lineFunc3Addr_5->text();
+            QString textAddr = ui->comboBoxAddressFunc3_5->currentText();;
             if(textAddr.length() == 2){
                 QByteArray text =QByteArray(textAddr.toLocal8Bit());
                 text.remove(2,1);
@@ -1932,27 +1946,27 @@ void MainWindow::sendTimerRequestLoop(){
 
 void MainWindow::on_checkDevice_1_stateChanged()
 {
-    showHideTableRow(ui->lineFunc3Addr_1, ui->checkDevice_1->checkState());
+    showHideTableRow(ui->comboBoxAddressFunc3_1->currentText(), ui->checkDevice_1->checkState());
 }
 
 void MainWindow::on_checkDevice_2_stateChanged()
 {
-    showHideTableRow(ui->lineFunc3Addr_2, ui->checkDevice_2->checkState());
+    showHideTableRow(ui->comboBoxAddressFunc3_2->currentText(), ui->checkDevice_2->checkState());
 }
 
 void MainWindow::on_checkDevice_3_stateChanged()
 {
-    showHideTableRow(ui->lineFunc3Addr_3, ui->checkDevice_3->checkState());
+    showHideTableRow(ui->comboBoxAddressFunc3_3->currentText(), ui->checkDevice_3->checkState());
 }
 
 void MainWindow::on_checkDevice_4_stateChanged()
 {
-    showHideTableRow(ui->lineFunc3Addr_4, ui->checkDevice_4->checkState());
+    showHideTableRow(ui->comboBoxAddressFunc3_4->currentText(), ui->checkDevice_4->checkState());
 }
 
 void MainWindow::on_checkDevice_5_stateChanged()
 {
-    showHideTableRow(ui->lineFunc3Addr_5, ui->checkDevice_5->checkState());
+    showHideTableRow(ui->comboBoxAddressFunc3_5->currentText(), ui->checkDevice_5->checkState());
 }
 
 void MainWindow::findDevice()//запуск таймера на поиск
@@ -1967,8 +1981,15 @@ void MainWindow::findDevice()//запуск таймера на поиск
     ui->comboBoxAddressFunc3_4->clear();
     ui->comboBoxAddressFunc3_5->clear();
     ui->buttonSend->setEnabled(false);
+    ui->buttonFunction3Send->setEnabled(false);
     ui->buttonTimerStart->setEnabled(false);
+    ui->buttonFunction3Loop->setEnabled(false);
     ui->comboBoxAddress->setEnabled(false);
+    ui->comboBoxAddressFunc3_1->setEnabled(false);
+    ui->comboBoxAddressFunc3_2->setEnabled(false);
+    ui->comboBoxAddressFunc3_3->setEnabled(false);
+    ui->comboBoxAddressFunc3_4->setEnabled(false);
+    ui->comboBoxAddressFunc3_5->setEnabled(false);
     timerFindDevice->start(400);
 
     request a;
@@ -1989,6 +2010,7 @@ void MainWindow::findDevice()//запуск таймера на поиск
 
 void MainWindow::sendFindRequest()//создание запроса на поиск
 {
+    ui->comboBoxFunc->setCurrentIndex(0);
     if(answerIsGet)
     {
         QByteArray outText2 = QByteArray(1,ReqAddr[0]).toHex();
@@ -2005,8 +2027,15 @@ void MainWindow::sendFindRequest()//создание запроса на пои�
         timerFindDevice->stop();
         ui->comboBoxFunc->setCurrentIndex(1);
         ui->buttonSend->setEnabled(true);
+        ui->buttonFunction3Send->setEnabled(true);
         ui->buttonTimerStart->setEnabled(true);
+        ui->buttonFunction3Loop->setEnabled(true);
         ui->comboBoxAddress->setEnabled(true);
+        ui->comboBoxAddressFunc3_1->setEnabled(true);
+        ui->comboBoxAddressFunc3_2->setEnabled(true);
+        ui->comboBoxAddressFunc3_3->setEnabled(true);
+        ui->comboBoxAddressFunc3_4->setEnabled(true);
+        ui->comboBoxAddressFunc3_5->setEnabled(true);
         ui->textEdit->clear();
         getRequestAddr();
     }else

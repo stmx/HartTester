@@ -53,7 +53,7 @@ private slots:
     void createRequestOut(bool tr);
     void getRequestAddr();
     void changedInByteExpected();    
-    void showHideTableRow(QLineEdit *r, bool t);
+    void showHideTableRow(QString r, bool t);
     void ResetAddressInit();
 
     void on_lineAddrShort_textChanged();
