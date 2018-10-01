@@ -722,14 +722,11 @@ void MainWindow::on_spinData91_valueChanged(int arg1)//разрешение вв
     }transf;
     QByteArray text;
     QByteArray hex;
-    QRegExp rx("lineFloat_[0-9]$");
     QWidget* centralWidget = ui->centralWidget;
     QLineEdit * lineFloat;
     QLineEdit * lineFloatByte;
     int n = 0;
     int m = 0;
-    m=arg1%4;
-    n=1+((arg1-m)/4);
     for(n = 1; n<=6;n++)
     {
         QString findObject = "lineFloat_"+QString().number(n);
@@ -859,125 +856,22 @@ void MainWindow::create91Request()//создание 91 запроса
     QByteArray text =QByteArray(ui->lineAddr91->text().toLocal8Bit());
     QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
     i++;
-    if(ui->lineFloat_1_Byte_1->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_1_Byte_1->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_1_Byte_2->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_1_Byte_2->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_1_Byte_3->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_1_Byte_3->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_1_Byte_4->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_1_Byte_4->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_2_Byte_1->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_2_Byte_1->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_2_Byte_2->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_2_Byte_2->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_2_Byte_3->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_2_Byte_3->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_2_Byte_4->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_2_Byte_4->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_3_Byte_1->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_3_Byte_1->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_3_Byte_2->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_3_Byte_2->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_3_Byte_3->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_3_Byte_3->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_3_Byte_4->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_3_Byte_4->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_4_Byte_1->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_4_Byte_1->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_4_Byte_2->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_4_Byte_2->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_4_Byte_3->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_4_Byte_3->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_4_Byte_4->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_4_Byte_4->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_5_Byte_1->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_5_Byte_1->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_5_Byte_2->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_5_Byte_2->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_5_Byte_3->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_5_Byte_3->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_5_Byte_4->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_5_Byte_4->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_6_Byte_1->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_6_Byte_1->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_6_Byte_2->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_6_Byte_2->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_6_Byte_3->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_6_Byte_3->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
-    }
-    if(ui->lineFloat_6_Byte_4->isEnabled()){
-        QByteArray text =QByteArray(ui->lineFloat_6_Byte_4->text().toLocal8Bit());
-        QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
-        i++;
+    int n = 0;
+    int m = 0;
+    QLineEdit *lineFloatByte;
+    QWidget* centralWidget = ui->centralWidget;
+    for(n = 1; n<=6;n++)
+    {
+        for(m = 1; m<=4;m++)
+        {
+            QString findObject = "lineFloat_"+QString().number(n)+"_Byte_"+QString().number(m);
+            lineFloatByte = centralWidget->findChild<QLineEdit *>(findObject);
+            if(lineFloatByte->isEnabled()){
+                QByteArray text =QByteArray(lineFloatByte->text().toLocal8Bit());
+                QByteArray hex = QByteArray::fromHex(text); data91[i] = hex[0];
+                i++;
+            }
+        }
     }
     createRequestOut();
     //ui->pushButton_7->setEnabled(false);
@@ -1420,6 +1314,7 @@ void MainWindow::checkPassword()
         ui->tabWidget->setTabEnabled(0,true);
     }else
     {
-        ui->tabWidget->setTabEnabled(0,false);
+        ui->tabWidget->setCurrentIndex(1);
+        ui->tabWidget->setTabEnabled(0,true);
     }
 }

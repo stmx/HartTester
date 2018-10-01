@@ -1422,7 +1422,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>1234</string>
+     <string/>
     </property>
    </widget>
   </widget>
