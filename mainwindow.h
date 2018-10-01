@@ -55,7 +55,9 @@ private slots:
     void changedInByteExpected();    
     void showHideTableRow(QString r, bool t);
     void ResetAddressInit();
-
+    void spanRequest();
+    void zeroRequest();
+    void zeroFirstVarRequest();
     void on_lineAddrShort_textChanged();
     void on_lineAddrLong_textChanged();
 
@@ -71,6 +73,9 @@ private slots:
 
     void on_comboBoxAddress_currentIndexChanged(int index);
 
+    void indicateCalibrationSpan();
+    void indicateCalibrationZero();
+    void indicateCalibrationZeroFirstVar();
 private:
     Ui::MainWindow *ui;
     QSerialPort *serial = nullptr;
@@ -78,6 +83,7 @@ private:
     QTimer *timerFunction3 = nullptr;
     QTimer *timerFunction3Loop = nullptr;
     QTimer *timerFindDevice = nullptr;
+    QTimer *timerCalibration = nullptr;
 };
 
 #endif // MAINWINDOW_H

@@ -13,7 +13,6 @@
 #include <QDateTime>
 #include <QFile>
 #define private public
-#include <QThread>
 
 //QThread::msleep(5000);
 static bool PortOpen;
@@ -40,6 +39,7 @@ static int timerSendRequest = 400;
 static int numberRow = 0;
 static QStandardItemModel *model = new QStandardItemModel;
 static QComboBox *comboBoxAddress;
+static int countIndicateCalibration = 0;
 
 void ResetAddress()
 {
@@ -70,14 +70,20 @@ MainWindow::MainWindow(QWidget *parent) :
     timer(new QTimer(this)),
     timerFunction3(new QTimer(this)),
     timerFunction3Loop(new QTimer(this)),
-    timerFindDevice(new QTimer(this))
+    timerFindDevice(new QTimer(this)),
+    timerCalibration(new QTimer(this))
     {
         ui->setupUi(this);
         ui->buttonClose->setEnabled(false);
         ui->buttonFindDevice->setEnabled(false);
-        ui->buttonFindDeviceFunc3->setEnabled(false);
         ui->buttonSend->setEnabled(!PortOpen);
         ui->checkEnTextBrows->setCheckState(Qt::Checked);
+
+
+        ui->label_3->setStyleSheet("QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}");
+        ui->label_4->setStyleSheet("QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}");
+        ui->label_5->setStyleSheet("QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}");
+
         foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
                     ui->comboBox->addItem(info.portName());        
 
@@ -115,21 +121,24 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(timerFunction3Loop, &QTimer::timeout, this, &MainWindow::sendTimerRequestLoop);
         connect(timerFindDevice, &QTimer::timeout, this, &MainWindow::sendFindRequest);
 
-        connect(ui->buttonResetAddr, &QPushButton::clicked,this,&MainWindow::ResetAddressInit);
-        connect(ui->buttonResetAddrFunc3, &QPushButton::clicked,this,&MainWindow::ResetAddressInit);
-        connect(ui->pushButton, &QPushButton::clicked,this,&MainWindow::connectCOM);
-        connect(ui->buttonClose, &QPushButton::clicked,this,&MainWindow::closeCOM);
-        connect(ui->buttonSend, &QPushButton::clicked,this,&MainWindow::sendRequest);
-        connect(ui->buttonClear, &QPushButton::clicked,this,&MainWindow::clearText);
-        connect(ui->buttonTimerStart, &QPushButton::clicked,this,&MainWindow::startLoop);
-        connect(ui->buttonTimerStop, &QPushButton::clicked,this,&MainWindow::stopLoop);
-        connect(ui->pushButton_7, &QPushButton::clicked,this,&MainWindow::create91Request);
-        connect(ui->pushButton_10, &QPushButton::clicked,this,&MainWindow::stopLoopFunction3);
-        connect(ui->pushButton_11, &QPushButton::clicked,this,&MainWindow::clearTable);
-        connect(ui->buttonFindDevice, &QPushButton::clicked,this,&MainWindow::findDevice);
-        connect(ui->buttonFindDeviceFunc3, &QPushButton::clicked,this,&MainWindow::findDevice);
-        connect(ui->buttonFunction3Send, &QPushButton::clicked,this,&MainWindow::Function3Send);
-        connect(ui->buttonFunction3Loop, &QPushButton::clicked,this,&MainWindow::startLoopFunction3);
+
+
+        connect(ui->buttonResetAddr,        &QPushButton::clicked,  this,   &MainWindow::ResetAddressInit);
+        connect(ui->pushButton,             &QPushButton::clicked,  this,   &MainWindow::connectCOM);
+        connect(ui->buttonClose,            &QPushButton::clicked,  this,   &MainWindow::closeCOM);
+        connect(ui->buttonSend,             &QPushButton::clicked,  this,   &MainWindow::sendRequest);
+        connect(ui->buttonClear,            &QPushButton::clicked,  this,   &MainWindow::clearText);
+        connect(ui->buttonTimerStart,       &QPushButton::clicked,  this,   &MainWindow::startLoop);
+        connect(ui->buttonTimerStop,        &QPushButton::clicked,  this,   &MainWindow::stopLoop);
+        connect(ui->pushButton_7,           &QPushButton::clicked,  this,   &MainWindow::create91Request);
+        connect(ui->pushButton_10,          &QPushButton::clicked,  this,   &MainWindow::stopLoopFunction3);
+        connect(ui->pushButton_11,          &QPushButton::clicked,  this,   &MainWindow::clearTable);
+        connect(ui->buttonFindDevice,       &QPushButton::clicked,  this,   &MainWindow::findDevice);        
+        connect(ui->buttonFunction3Send,    &QPushButton::clicked,  this,   &MainWindow::Function3Send);
+        connect(ui->buttonFunction3Loop,    &QPushButton::clicked,  this,   &MainWindow::startLoopFunction3);
+        connect(ui->buttonSpan,             &QPushButton::clicked,  this,   &MainWindow::spanRequest);
+        connect(ui->buttonZero,             &QPushButton::clicked,  this,   &MainWindow::zeroRequest);
+        connect(ui->buttonZeroFirstVar,     &QPushButton::clicked,  this,   &MainWindow::zeroFirstVarRequest);
 
         ResetAddressInit();
         timer->stop();
@@ -144,26 +153,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 void MainWindow::ResetAddressInit()
-{/*
-    switch (ui->tabWidget->currentIndex()) {
-        case 0:
-            comboBoxAddress = ui->comboBoxAddress;
-            ResetAddress();
-        break;
-        case 1:
-            comboBoxAddress = ui->comboBoxAddressFunc3_1;
-            ResetAddress();
-            comboBoxAddress = ui->comboBoxAddressFunc3_2;
-            ResetAddress();
-            comboBoxAddress = ui->comboBoxAddressFunc3_3;
-            ResetAddress();
-            comboBoxAddress = ui->comboBoxAddressFunc3_4;
-            ResetAddress();
-            comboBoxAddress = ui->comboBoxAddressFunc3_5;
-            ResetAddress();
-        break;
-    }*/
-
+{
     comboBoxAddress = ui->comboBoxAddress;
     ResetAddress();
     comboBoxAddress = ui->comboBoxAddressFunc3_1;
@@ -304,7 +294,6 @@ void MainWindow::connectCOM()//connect
         ui->pushButton->setEnabled(false);
         ui->buttonClose->setEnabled(true);
         ui->buttonFindDevice->setEnabled(true);
-        ui->buttonFindDeviceFunc3->setEnabled(true);
         ui->textEdit->setText(" ");
     }
     else {
@@ -345,7 +334,7 @@ void MainWindow::sendRequest()//send
         //case 1: textRequestOut = ui->textEditFunction3;break;
         default: textRequestOut = ui->textEdit;break;
     }
-    if(int(ui->tabWidget->currentIndex()) == 0){
+    if(int(ui->tabWidget->currentIndex()) == 0 || int(ui->tabWidget->currentIndex()) == 2){
         textRequestOut->setTextBackgroundColor(QColor(255,255,255));
         textRequestOut->setTextColor(QColor(0,0,0));
         textRequestOut->insertPlainText(QString("\n")+textRequest+QString(" "));
@@ -1827,6 +1816,7 @@ void MainWindow::clearTable()
 }
 void MainWindow::on_tabWidget_currentChanged(int index)
 {
+    changedInByteExpected();
     switch (index) {
         case 0:
             ui->comboBoxFunc->setCurrentIndex(0);
@@ -2064,4 +2054,124 @@ void MainWindow::on_comboBoxAddress_highlighted(const QString &arg1)
 void MainWindow::on_comboBoxAddress_currentIndexChanged(int index)
 {
         getRequestAddr();
+}
+
+void MainWindow::spanRequest()
+{
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationSpan);
+    request a;
+    a.setLongFrame(0);
+    a.setPreambleLength(ui->spinBox->value());
+    a.setAddress(ReqAddr);
+    a.function36();
+    answerIsGet = false;
+    QByteArray req = QByteArray(a.getRequest(),a.getRequestLength()).toHex();
+    int i = 0;
+    for(i = 2; i<req.length();i+=3){
+        req.insert(i,' ');
+    }
+    ui->lineRequest->setText(req);
+    QLabel* pLabel = ui->label_3;
+    pLabel->setStyleSheet("QLabel{background-color :rgba(255,0,0,200);border-radius:10px;}");
+    inBytesExpected = int(ui->spinBox->value())+7+2*int(ui->checkLongFrame->checkState());
+    timerCalibration->start(50);
+    sendRequest();
+}
+void MainWindow::indicateCalibrationSpan()
+{
+
+    if(answerIsGet)
+    {
+        ui->label_3->setStyleSheet("QLabel{background-color :rgba(0,255,0,200);border-radius:10px;}");
+        countIndicateCalibration = 0;
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->label_3->setStyleSheet("QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}");
+        timerCalibration->stop();
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationSpan);
+    }
+    countIndicateCalibration++;
+}
+
+void MainWindow::zeroRequest()
+{
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZero);
+    request a;
+    a.setLongFrame(0);
+    a.setPreambleLength(ui->spinBox->value());
+    a.setAddress(ReqAddr);
+    a.function37();
+    answerIsGet = false;
+    QByteArray req = QByteArray(a.getRequest(),a.getRequestLength()).toHex();
+    int i = 0;
+    for(i = 2; i<req.length();i+=3){
+        req.insert(i,' ');
+    }
+    ui->lineRequest->setText(req);
+    QLabel* pLabel = ui->label_4;
+    pLabel->setStyleSheet("QLabel{background-color :rgba(255,0,0,200);border-radius:10px;}");
+    inBytesExpected = int(ui->spinBox->value())+7+2*int(ui->checkLongFrame->checkState());
+    timerCalibration->start(50);
+    sendRequest();
+}
+void MainWindow::indicateCalibrationZero()
+{
+
+    if(answerIsGet)
+    {
+        ui->label_4->setStyleSheet("QLabel{background-color :rgba(0,255,0,200);border-radius:10px;}");
+        countIndicateCalibration = 0;
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->label_4->setStyleSheet("QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}");
+        timerCalibration->stop();
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZero);
+    }
+    countIndicateCalibration++;
+}
+
+void MainWindow::zeroFirstVarRequest()
+{
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZeroFirstVar);
+    request a;
+    a.setLongFrame(0);
+    a.setPreambleLength(ui->spinBox->value());
+    a.setAddress(ReqAddr);
+    a.function43();
+    answerIsGet = false;
+    QByteArray req = QByteArray(a.getRequest(),a.getRequestLength()).toHex();
+    int i = 0;
+    for(i = 2; i<req.length();i+=3){
+        req.insert(i,' ');
+    }
+    ui->lineRequest->setText(req);
+    QLabel* pLabel = ui->label_5;
+    pLabel->setStyleSheet("QLabel{background-color :rgba(255,0,0,200);border-radius:10px;}");
+    inBytesExpected = int(ui->spinBox->value())+7+2*int(ui->checkLongFrame->checkState());
+    timerCalibration->start(50);
+    sendRequest();
+}
+void MainWindow::indicateCalibrationZeroFirstVar()
+{
+
+    if(answerIsGet)
+    {
+        ui->label_5->setStyleSheet("QLabel{background-color :rgba(0,255,0,200);border-radius:10px;}");
+        countIndicateCalibration = 0;
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->label_5->setStyleSheet("QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}");
+        timerCalibration->stop();
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZeroFirstVar);
+    }
+    countIndicateCalibration++;
 }
