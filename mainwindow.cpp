@@ -14,6 +14,10 @@
 #include <QFile>
 #define private public
 
+static QString styleSheetCalibrationDefault = "QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}";
+static QString styleSheetCalibrationOk = "QLabel{background-color :rgba(0,255,0,200);border-radius:10px;}";
+static QString styleSheetCalibrationBad = "QLabel{background-color :rgba(255,0,0,200);border-radius:10px;}";
+
 //QThread::msleep(5000);
 static bool PortOpen;
 static bool answerStart = false;
@@ -79,13 +83,14 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->buttonSend->setEnabled(!PortOpen);
         ui->checkEnTextBrows->setCheckState(Qt::Checked);
 
+        ui->tabWidget->setTabEnabled(0,false);
 
-        ui->label_3->setStyleSheet("QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}");
-        ui->label_4->setStyleSheet("QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}");
-        ui->label_5->setStyleSheet("QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}");
+        ui->label_3->setStyleSheet(styleSheetCalibrationDefault);
+        ui->label_4->setStyleSheet(styleSheetCalibrationDefault);
+        ui->label_5->setStyleSheet(styleSheetCalibrationDefault);
 
         foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
-                    ui->comboBox->addItem(info.portName());        
+                    ui->comboBox->addItem(info.portName());
 
         QString arg1 = ui->lineEdit_2->text();
         QByteArray text =QByteArray(arg1.toLocal8Bit());
@@ -115,31 +120,28 @@ MainWindow::MainWindow(QWidget *parent) :
 
         comboBoxAddress = ui->comboBoxAddress;
 
-        connect(serial, &QSerialPort::readyRead, this, &MainWindow::readData);
-        connect(timer, &QTimer::timeout, this, &MainWindow::showTime);
-        connect(timerFunction3, &QTimer::timeout, this, &MainWindow::sendTimerRequest);
-        connect(timerFunction3Loop, &QTimer::timeout, this, &MainWindow::sendTimerRequestLoop);
-        connect(timerFindDevice, &QTimer::timeout, this, &MainWindow::sendFindRequest);
-
-
-
-        connect(ui->buttonResetAddr,        &QPushButton::clicked,  this,   &MainWindow::ResetAddressInit);
-        connect(ui->pushButton,             &QPushButton::clicked,  this,   &MainWindow::connectCOM);
-        connect(ui->buttonClose,            &QPushButton::clicked,  this,   &MainWindow::closeCOM);
-        connect(ui->buttonSend,             &QPushButton::clicked,  this,   &MainWindow::sendRequest);
-        connect(ui->buttonClear,            &QPushButton::clicked,  this,   &MainWindow::clearText);
-        connect(ui->buttonTimerStart,       &QPushButton::clicked,  this,   &MainWindow::startLoop);
-        connect(ui->buttonTimerStop,        &QPushButton::clicked,  this,   &MainWindow::stopLoop);
-        connect(ui->pushButton_7,           &QPushButton::clicked,  this,   &MainWindow::create91Request);
-        connect(ui->pushButton_10,          &QPushButton::clicked,  this,   &MainWindow::stopLoopFunction3);
-        connect(ui->pushButton_11,          &QPushButton::clicked,  this,   &MainWindow::clearTable);
-        connect(ui->buttonFindDevice,       &QPushButton::clicked,  this,   &MainWindow::findDevice);        
-        connect(ui->buttonFunction3Send,    &QPushButton::clicked,  this,   &MainWindow::Function3Send);
-        connect(ui->buttonFunction3Loop,    &QPushButton::clicked,  this,   &MainWindow::startLoopFunction3);
-        connect(ui->buttonSpan,             &QPushButton::clicked,  this,   &MainWindow::spanRequest);
-        connect(ui->buttonZero,             &QPushButton::clicked,  this,   &MainWindow::zeroRequest);
-        connect(ui->buttonZeroFirstVar,     &QPushButton::clicked,  this,   &MainWindow::zeroFirstVarRequest);
-
+        connect(serial,                     &QSerialPort::readyRead,this,   &MainWindow::readData);             //slot recieve data from COM port
+        connect(timer,                      &QTimer::timeout,       this,   &MainWindow::showTime);             //slot timer for sending loop request
+        connect(timerFunction3,             &QTimer::timeout,       this,   &MainWindow::sendTimerRequest);     //slot timer for sending request for tab Function3
+        connect(timerFunction3Loop,         &QTimer::timeout,       this,   &MainWindow::sendTimerRequestLoop); //slot timer for sending loop request for tab Function3
+        connect(timerFindDevice,            &QTimer::timeout,       this,   &MainWindow::sendFindRequest);      //slot timer for sending find request
+        connect(ui->buttonResetAddr,        &QPushButton::clicked,  this,   &MainWindow::ResetAddressInit);     //slot button for reset combobox address
+        connect(ui->pushButton,             &QPushButton::clicked,  this,   &MainWindow::connectCOM);           //slot button for connection COM port
+        connect(ui->buttonClose,            &QPushButton::clicked,  this,   &MainWindow::closeCOM);             //slot button for closing COM port
+        connect(ui->buttonSend,             &QPushButton::clicked,  this,   &MainWindow::sendRequest);          //slot button for closing COM port
+        connect(ui->buttonClear,            &QPushButton::clicked,  this,   &MainWindow::clearText);            //slot button for clear developer TextEEdit
+        connect(ui->buttonTimerStart,       &QPushButton::clicked,  this,   &MainWindow::startLoop);            //slot button start timer sending loop request
+        connect(ui->buttonTimerStop,        &QPushButton::clicked,  this,   &MainWindow::stopLoop);             //slot button stop timer sending loop request
+        connect(ui->pushButton_7,           &QPushButton::clicked,  this,   &MainWindow::create91Request);      //slot button create request drom data for request91
+        connect(ui->pushButton_10,          &QPushButton::clicked,  this,   &MainWindow::stopLoopFunction3);    //slot button start timer for sending loop request for tab Function3
+        connect(ui->pushButton_11,          &QPushButton::clicked,  this,   &MainWindow::clearTable);           //slot button clear table for tab Function 3
+        connect(ui->buttonFindDevice,       &QPushButton::clicked,  this,   &MainWindow::findDevice);           //slot button start timer for sending find request
+        connect(ui->buttonFunction3Send,    &QPushButton::clicked,  this,   &MainWindow::Function3Send);        //slot button for sending request for tab Function3
+        connect(ui->buttonFunction3Loop,    &QPushButton::clicked,  this,   &MainWindow::startLoopFunction3);   //slot button start timer for sending loop request for tab Function3
+        connect(ui->buttonSpan,             &QPushButton::clicked,  this,   &MainWindow::spanRequest);          //slot button for sending Span request for tab Calibration
+        connect(ui->buttonZero,             &QPushButton::clicked,  this,   &MainWindow::zeroRequest);          //slot button for sending Zero request for tab Calibration
+        connect(ui->buttonZeroFirstVar,     &QPushButton::clicked,  this,   &MainWindow::zeroFirstVarRequest);  //slot button for sending request zero first variable for tab Calibration
+        connect(ui->linePassword,           &QLineEdit::textEdited,this,&MainWindow::checkPassword);
         ResetAddressInit();
         timer->stop();
         timerFunction3->stop();
@@ -465,7 +467,7 @@ void MainWindow::readData()//read data
                     transf.ie[0] = zData[8];
                     transf.ie[1] = zData[7];
                     transf.ie[2] = zData[6];
-                    transf.ie[3] = zData[5];                    
+                    transf.ie[3] = zData[5];
                     item = new QStandardItem(QString("%1").number(transf.f,'e',4));
                     model->setItem(numberRow, 2, item);
                     if(bds) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
@@ -479,7 +481,7 @@ void MainWindow::readData()//read data
                     transf.ie[0] = zData[18];
                     transf.ie[1] = zData[17];
                     transf.ie[2] = zData[16];
-                    transf.ie[3] = zData[15];                    
+                    transf.ie[3] = zData[15];
                     item = new QStandardItem(QString("%1").number(transf.f,'e',4));
                     model->setItem(numberRow, 4, item);
                     if(bds) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
@@ -702,7 +704,7 @@ void MainWindow::on_lineEdit_2_textChanged(const QString &arg1)//ввод дда
             case 3:
                 inBytesExpected = int(ui->spinBox->value())+31+2*2*int(ui->checkLongFrame->checkState());
                 break;
-            case 51:             
+            case 51:
                 inBytesExpected = int(ui->spinBox->value())+7+int(ReqData[1])+2*int(ui->checkLongFrame->checkState());
                 break;
             case 91:
@@ -720,807 +722,43 @@ void MainWindow::on_spinData91_valueChanged(int arg1)//разрешение вв
     }transf;
     QByteArray text;
     QByteArray hex;
-
-    switch (arg1) {
-    case 1:
-        ui->lineFloat_1->setEnabled(false);
-        ui->lineFloat_2->setEnabled(false);
-        ui->lineFloat_3->setEnabled(false);
-        ui->lineFloat_4->setEnabled(false);
-        ui->lineFloat_5->setEnabled(false);
-        ui->lineFloat_6->setEnabled(false);
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(false);
-        ui->lineFloat_1_Byte_3->setEnabled(false);
-        ui->lineFloat_1_Byte_4->setEnabled(false);
-        ui->lineFloat_2_Byte_1->setEnabled(false);
-        ui->lineFloat_2_Byte_2->setEnabled(false);
-        ui->lineFloat_2_Byte_3->setEnabled(false);
-        ui->lineFloat_2_Byte_4->setEnabled(false);
-        ui->lineFloat_3_Byte_1->setEnabled(false);
-        ui->lineFloat_3_Byte_2->setEnabled(false);
-        ui->lineFloat_3_Byte_3->setEnabled(false);
-        ui->lineFloat_3_Byte_4->setEnabled(false);
-        ui->lineFloat_4_Byte_1->setEnabled(false);
-        ui->lineFloat_4_Byte_2->setEnabled(false);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 2:
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(false);
-        ui->lineFloat_1_Byte_4->setEnabled(false);
-        ui->lineFloat_2_Byte_1->setEnabled(false);
-        ui->lineFloat_2_Byte_2->setEnabled(false);
-        ui->lineFloat_2_Byte_3->setEnabled(false);
-        ui->lineFloat_2_Byte_4->setEnabled(false);
-        ui->lineFloat_3_Byte_1->setEnabled(false);
-        ui->lineFloat_3_Byte_2->setEnabled(false);
-        ui->lineFloat_3_Byte_3->setEnabled(false);
-        ui->lineFloat_3_Byte_4->setEnabled(false);
-        ui->lineFloat_4_Byte_1->setEnabled(false);
-        ui->lineFloat_4_Byte_2->setEnabled(false);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 3:
-        ui->lineFloat_1->setEnabled(false);
-        ui->lineFloat_2->setEnabled(false);
-        ui->lineFloat_3->setEnabled(false);
-        ui->lineFloat_4->setEnabled(false);
-        ui->lineFloat_5->setEnabled(false);
-        ui->lineFloat_6->setEnabled(false);
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(false);
-        ui->lineFloat_2_Byte_1->setEnabled(false);
-        ui->lineFloat_2_Byte_2->setEnabled(false);
-        ui->lineFloat_2_Byte_3->setEnabled(false);
-        ui->lineFloat_2_Byte_4->setEnabled(false);
-        ui->lineFloat_3_Byte_1->setEnabled(false);
-        ui->lineFloat_3_Byte_2->setEnabled(false);
-        ui->lineFloat_3_Byte_3->setEnabled(false);
-        ui->lineFloat_3_Byte_4->setEnabled(false);
-        ui->lineFloat_4_Byte_1->setEnabled(false);
-        ui->lineFloat_4_Byte_2->setEnabled(false);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 4:
-        text = ui->lineFloat_1_Byte_1->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[0] =char(hex[0]);
-        text = ui->lineFloat_1_Byte_2->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[1] =char(hex[0]);
-        text = ui->lineFloat_1_Byte_3->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[2] =char(hex[0]);
-        text = ui->lineFloat_1_Byte_4->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[3] =char(hex[0]);
-        ui->lineFloat_1->setText(QString("%1").number(transf.f));
-
-        ui->lineFloat_1->setEnabled(true);
-        ui->lineFloat_2->setEnabled(false);
-        ui->lineFloat_3->setEnabled(false);
-        ui->lineFloat_4->setEnabled(false);
-        ui->lineFloat_5->setEnabled(false);
-        ui->lineFloat_6->setEnabled(false);
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(false);
-        ui->lineFloat_2_Byte_2->setEnabled(false);
-        ui->lineFloat_2_Byte_3->setEnabled(false);
-        ui->lineFloat_2_Byte_4->setEnabled(false);
-        ui->lineFloat_3_Byte_1->setEnabled(false);
-        ui->lineFloat_3_Byte_2->setEnabled(false);
-        ui->lineFloat_3_Byte_3->setEnabled(false);
-        ui->lineFloat_3_Byte_4->setEnabled(false);
-        ui->lineFloat_4_Byte_1->setEnabled(false);
-        ui->lineFloat_4_Byte_2->setEnabled(false);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 5:
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(false);
-        ui->lineFloat_2_Byte_3->setEnabled(false);
-        ui->lineFloat_2_Byte_4->setEnabled(false);
-        ui->lineFloat_3_Byte_1->setEnabled(false);
-        ui->lineFloat_3_Byte_2->setEnabled(false);
-        ui->lineFloat_3_Byte_3->setEnabled(false);
-        ui->lineFloat_3_Byte_4->setEnabled(false);
-        ui->lineFloat_4_Byte_1->setEnabled(false);
-        ui->lineFloat_4_Byte_2->setEnabled(false);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 6:
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(false);
-        ui->lineFloat_2_Byte_4->setEnabled(false);
-        ui->lineFloat_3_Byte_1->setEnabled(false);
-        ui->lineFloat_3_Byte_2->setEnabled(false);
-        ui->lineFloat_3_Byte_3->setEnabled(false);
-        ui->lineFloat_3_Byte_4->setEnabled(false);
-        ui->lineFloat_4_Byte_1->setEnabled(false);
-        ui->lineFloat_4_Byte_2->setEnabled(false);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 7:
-        ui->lineFloat_1->setEnabled(true);
-        ui->lineFloat_2->setEnabled(false);
-        ui->lineFloat_3->setEnabled(false);
-        ui->lineFloat_4->setEnabled(false);
-        ui->lineFloat_5->setEnabled(false);
-        ui->lineFloat_6->setEnabled(false);
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(false);
-        ui->lineFloat_3_Byte_1->setEnabled(false);
-        ui->lineFloat_3_Byte_2->setEnabled(false);
-        ui->lineFloat_3_Byte_3->setEnabled(false);
-        ui->lineFloat_3_Byte_4->setEnabled(false);
-        ui->lineFloat_4_Byte_1->setEnabled(false);
-        ui->lineFloat_4_Byte_2->setEnabled(false);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 8:
-        text = ui->lineFloat_2_Byte_1->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[0] =char(hex[0]);
-        text = ui->lineFloat_2_Byte_2->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[1] =char(hex[0]);
-        text = ui->lineFloat_2_Byte_3->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[2] =char(hex[0]);
-        text = ui->lineFloat_2_Byte_4->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[3] =char(hex[0]);
-        ui->lineFloat_2->setText(QString("%1").number(transf.f));
-
-        ui->lineFloat_1->setEnabled(true);
-        ui->lineFloat_2->setEnabled(true);
-        ui->lineFloat_3->setEnabled(false);
-        ui->lineFloat_4->setEnabled(false);
-        ui->lineFloat_5->setEnabled(false);
-        ui->lineFloat_6->setEnabled(false);
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(false);
-        ui->lineFloat_3_Byte_2->setEnabled(false);
-        ui->lineFloat_3_Byte_3->setEnabled(false);
-        ui->lineFloat_3_Byte_4->setEnabled(false);
-        ui->lineFloat_4_Byte_1->setEnabled(false);
-        ui->lineFloat_4_Byte_2->setEnabled(false);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 9:
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(false);
-        ui->lineFloat_3_Byte_3->setEnabled(false);
-        ui->lineFloat_3_Byte_4->setEnabled(false);
-        ui->lineFloat_4_Byte_1->setEnabled(false);
-        ui->lineFloat_4_Byte_2->setEnabled(false);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 10:
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(false);
-        ui->lineFloat_3_Byte_4->setEnabled(false);
-        ui->lineFloat_4_Byte_1->setEnabled(false);
-        ui->lineFloat_4_Byte_2->setEnabled(false);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 11:
-        ui->lineFloat_1->setEnabled(true);
-        ui->lineFloat_2->setEnabled(true);
-        ui->lineFloat_3->setEnabled(false);
-        ui->lineFloat_4->setEnabled(false);
-        ui->lineFloat_5->setEnabled(false);
-        ui->lineFloat_6->setEnabled(false);
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(false);
-        ui->lineFloat_4_Byte_1->setEnabled(false);
-        ui->lineFloat_4_Byte_2->setEnabled(false);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 12:
-        text = ui->lineFloat_3_Byte_1->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[0] =char(hex[0]);
-        text = ui->lineFloat_3_Byte_2->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[1] =char(hex[0]);
-        text = ui->lineFloat_3_Byte_3->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[2] =char(hex[0]);
-        text = ui->lineFloat_3_Byte_4->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[3] =char(hex[0]);
-        ui->lineFloat_3->setText(QString("%1").number(transf.f));
-
-        ui->lineFloat_1->setEnabled(true);
-        ui->lineFloat_2->setEnabled(true);
-        ui->lineFloat_3->setEnabled(true);
-        ui->lineFloat_4->setEnabled(false);
-        ui->lineFloat_5->setEnabled(false);
-        ui->lineFloat_6->setEnabled(false);
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(true);
-        ui->lineFloat_4_Byte_1->setEnabled(false);
-        ui->lineFloat_4_Byte_2->setEnabled(false);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 13:
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(true);
-        ui->lineFloat_4_Byte_1->setEnabled(true);
-        ui->lineFloat_4_Byte_2->setEnabled(false);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 14:
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(true);
-        ui->lineFloat_4_Byte_1->setEnabled(true);
-        ui->lineFloat_4_Byte_2->setEnabled(true);
-        ui->lineFloat_4_Byte_3->setEnabled(false);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-    case 15:
-        ui->lineFloat_1->setEnabled(true);
-        ui->lineFloat_2->setEnabled(true);
-        ui->lineFloat_3->setEnabled(true);
-        ui->lineFloat_4->setEnabled(false);
-        ui->lineFloat_5->setEnabled(false);
-        ui->lineFloat_6->setEnabled(false);
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(true);
-        ui->lineFloat_4_Byte_1->setEnabled(true);
-        ui->lineFloat_4_Byte_2->setEnabled(true);
-        ui->lineFloat_4_Byte_3->setEnabled(true);
-        ui->lineFloat_4_Byte_4->setEnabled(false);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-        break;
-    case 16:
-        text = ui->lineFloat_4_Byte_1->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[0] =char(hex[0]);
-        text = ui->lineFloat_4_Byte_2->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[1] =char(hex[0]);
-        text = ui->lineFloat_4_Byte_3->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[2] =char(hex[0]);
-        text = ui->lineFloat_4_Byte_4->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[3] =char(hex[0]);
-        ui->lineFloat_4->setText(QString("%1").number(transf.f));
-
-        ui->lineFloat_1->setEnabled(true);
-        ui->lineFloat_2->setEnabled(true);
-        ui->lineFloat_3->setEnabled(true);
-        ui->lineFloat_4->setEnabled(true);
-        ui->lineFloat_5->setEnabled(false);
-        ui->lineFloat_6->setEnabled(false);
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(true);
-        ui->lineFloat_4_Byte_1->setEnabled(true);
-        ui->lineFloat_4_Byte_2->setEnabled(true);
-        ui->lineFloat_4_Byte_3->setEnabled(true);
-        ui->lineFloat_4_Byte_4->setEnabled(true);
-        ui->lineFloat_5_Byte_1->setEnabled(false);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-        break;
-    case 17:
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(true);
-        ui->lineFloat_4_Byte_1->setEnabled(true);
-        ui->lineFloat_4_Byte_2->setEnabled(true);
-        ui->lineFloat_4_Byte_3->setEnabled(true);
-        ui->lineFloat_4_Byte_4->setEnabled(true);
-        ui->lineFloat_5_Byte_1->setEnabled(true);
-        ui->lineFloat_5_Byte_2->setEnabled(false);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-        break;
-    case 18:
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(true);
-        ui->lineFloat_4_Byte_1->setEnabled(true);
-        ui->lineFloat_4_Byte_2->setEnabled(true);
-        ui->lineFloat_4_Byte_3->setEnabled(true);
-        ui->lineFloat_4_Byte_4->setEnabled(true);
-        ui->lineFloat_5_Byte_1->setEnabled(true);
-        ui->lineFloat_5_Byte_2->setEnabled(true);
-        ui->lineFloat_5_Byte_3->setEnabled(false);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-        break;
-    case 19:
-        ui->lineFloat_1->setEnabled(true);
-        ui->lineFloat_2->setEnabled(true);
-        ui->lineFloat_3->setEnabled(true);
-        ui->lineFloat_4->setEnabled(true);
-        ui->lineFloat_5->setEnabled(false);
-        ui->lineFloat_6->setEnabled(false);
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(true);
-        ui->lineFloat_4_Byte_1->setEnabled(true);
-        ui->lineFloat_4_Byte_2->setEnabled(true);
-        ui->lineFloat_4_Byte_3->setEnabled(true);
-        ui->lineFloat_4_Byte_4->setEnabled(true);
-        ui->lineFloat_5_Byte_1->setEnabled(true);
-        ui->lineFloat_5_Byte_2->setEnabled(true);
-        ui->lineFloat_5_Byte_3->setEnabled(true);
-        ui->lineFloat_5_Byte_4->setEnabled(false);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-        break;
-    case 20:
-
-        text = ui->lineFloat_5_Byte_1->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[0] =char(hex[0]);
-        text = ui->lineFloat_5_Byte_2->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[1] =char(hex[0]);
-        text = ui->lineFloat_5_Byte_3->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[2] =char(hex[0]);
-        text = ui->lineFloat_5_Byte_4->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[3] =char(hex[0]);
-        ui->lineFloat_5->setText(QString("%1").number(transf.f));
-
-
-        ui->lineFloat_1->setEnabled(true);
-        ui->lineFloat_2->setEnabled(true);
-        ui->lineFloat_3->setEnabled(true);
-        ui->lineFloat_4->setEnabled(true);
-        ui->lineFloat_5->setEnabled(true);
-        ui->lineFloat_6->setEnabled(false);
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(true);
-        ui->lineFloat_4_Byte_1->setEnabled(true);
-        ui->lineFloat_4_Byte_2->setEnabled(true);
-        ui->lineFloat_4_Byte_3->setEnabled(true);
-        ui->lineFloat_4_Byte_4->setEnabled(true);
-        ui->lineFloat_5_Byte_1->setEnabled(true);
-        ui->lineFloat_5_Byte_2->setEnabled(true);
-        ui->lineFloat_5_Byte_3->setEnabled(true);
-        ui->lineFloat_5_Byte_4->setEnabled(true);
-        ui->lineFloat_6_Byte_1->setEnabled(false);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-        break;
-    case 21:
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(true);
-        ui->lineFloat_4_Byte_1->setEnabled(true);
-        ui->lineFloat_4_Byte_2->setEnabled(true);
-        ui->lineFloat_4_Byte_3->setEnabled(true);
-        ui->lineFloat_4_Byte_4->setEnabled(true);
-        ui->lineFloat_5_Byte_1->setEnabled(true);
-        ui->lineFloat_5_Byte_2->setEnabled(true);
-        ui->lineFloat_5_Byte_3->setEnabled(true);
-        ui->lineFloat_5_Byte_4->setEnabled(true);
-        ui->lineFloat_6_Byte_1->setEnabled(true);
-        ui->lineFloat_6_Byte_2->setEnabled(false);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-        break;
-    case 22:
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(true);
-        ui->lineFloat_4_Byte_1->setEnabled(true);
-        ui->lineFloat_4_Byte_2->setEnabled(true);
-        ui->lineFloat_4_Byte_3->setEnabled(true);
-        ui->lineFloat_4_Byte_4->setEnabled(true);
-        ui->lineFloat_5_Byte_1->setEnabled(true);
-        ui->lineFloat_5_Byte_2->setEnabled(true);
-        ui->lineFloat_5_Byte_3->setEnabled(true);
-        ui->lineFloat_5_Byte_4->setEnabled(true);
-        ui->lineFloat_6_Byte_1->setEnabled(true);
-        ui->lineFloat_6_Byte_2->setEnabled(true);
-        ui->lineFloat_6_Byte_3->setEnabled(false);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-        break;
-    case 23:
-        ui->lineFloat_1->setEnabled(true);
-        ui->lineFloat_2->setEnabled(true);
-        ui->lineFloat_3->setEnabled(true);
-        ui->lineFloat_4->setEnabled(true);
-        ui->lineFloat_5->setEnabled(true);
-        ui->lineFloat_6->setEnabled(false);
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(true);
-        ui->lineFloat_4_Byte_1->setEnabled(true);
-        ui->lineFloat_4_Byte_2->setEnabled(true);
-        ui->lineFloat_4_Byte_3->setEnabled(true);
-        ui->lineFloat_4_Byte_4->setEnabled(true);
-        ui->lineFloat_5_Byte_1->setEnabled(true);
-        ui->lineFloat_5_Byte_2->setEnabled(true);
-        ui->lineFloat_5_Byte_3->setEnabled(true);
-        ui->lineFloat_5_Byte_4->setEnabled(true);
-        ui->lineFloat_6_Byte_1->setEnabled(true);
-        ui->lineFloat_6_Byte_2->setEnabled(true);
-        ui->lineFloat_6_Byte_3->setEnabled(true);
-        ui->lineFloat_6_Byte_4->setEnabled(false);
-        break;
-        break;
-    case 24:
-
-        text = ui->lineFloat_6_Byte_1->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[3] =char(hex[0]);
-        text = ui->lineFloat_6_Byte_2->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[2] =char(hex[0]);
-        text = ui->lineFloat_6_Byte_3->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[1] =char(hex[0]);
-        text = ui->lineFloat_6_Byte_4->text().toLocal8Bit();
-        hex = QByteArray::fromHex(text);
-        transf.ie[0] =char(hex[0]);
-        ui->lineFloat_6->setText(QString("%1").number(transf.f));
-
-
-        ui->lineFloat_1->setEnabled(true);
-        ui->lineFloat_2->setEnabled(true);
-        ui->lineFloat_3->setEnabled(true);
-        ui->lineFloat_4->setEnabled(true);
-        ui->lineFloat_5->setEnabled(true);
-        ui->lineFloat_6->setEnabled(true);
-        ui->lineFloat_1_Byte_1->setEnabled(true);
-        ui->lineFloat_1_Byte_2->setEnabled(true);
-        ui->lineFloat_1_Byte_3->setEnabled(true);
-        ui->lineFloat_1_Byte_4->setEnabled(true);
-        ui->lineFloat_2_Byte_1->setEnabled(true);
-        ui->lineFloat_2_Byte_2->setEnabled(true);
-        ui->lineFloat_2_Byte_3->setEnabled(true);
-        ui->lineFloat_2_Byte_4->setEnabled(true);
-        ui->lineFloat_3_Byte_1->setEnabled(true);
-        ui->lineFloat_3_Byte_2->setEnabled(true);
-        ui->lineFloat_3_Byte_3->setEnabled(true);
-        ui->lineFloat_3_Byte_4->setEnabled(true);
-        ui->lineFloat_4_Byte_1->setEnabled(true);
-        ui->lineFloat_4_Byte_2->setEnabled(true);
-        ui->lineFloat_4_Byte_3->setEnabled(true);
-        ui->lineFloat_4_Byte_4->setEnabled(true);
-        ui->lineFloat_5_Byte_1->setEnabled(true);
-        ui->lineFloat_5_Byte_2->setEnabled(true);
-        ui->lineFloat_5_Byte_3->setEnabled(true);
-        ui->lineFloat_5_Byte_4->setEnabled(true);
-        ui->lineFloat_6_Byte_1->setEnabled(true);
-        ui->lineFloat_6_Byte_2->setEnabled(true);
-        ui->lineFloat_6_Byte_3->setEnabled(true);
-        ui->lineFloat_6_Byte_4->setEnabled(true);
-        break;
+    QRegExp rx("lineFloat_[0-9]$");
+    QWidget* centralWidget = ui->centralWidget;
+    QLineEdit * lineFloat;
+    QLineEdit * lineFloatByte;
+    int n = 0;
+    int m = 0;
+    m=arg1%4;
+    n=1+((arg1-m)/4);
+    for(n = 1; n<=6;n++)
+    {
+        QString findObject = "lineFloat_"+QString().number(n);
+        lineFloat = centralWidget->findChild<QLineEdit *>(findObject);
+        if(arg1>=n*4)
+        {
+            lineFloat->setEnabled(true);
+        }
+        else
+        {
+            lineFloat->setEnabled(false);
+        }
+        for(m = 1; m<=4;m++)
+        {
+            QString findObject = "lineFloat_"+QString().number(n)+"_Byte_"+QString().number(m);
+            lineFloatByte = centralWidget->findChild<QLineEdit *>(findObject);
+            if(arg1>=(n-1)*4+m)
+            {
+                lineFloatByte->setEnabled(true);
+            }
+            else
+            {
+                lineFloatByte->setEnabled(false);
+            }
+            text = lineFloatByte->text().toLocal8Bit();
+            hex = QByteArray::fromHex(text);
+            transf.ie[4-m] =char(hex[0]);
+        }
+        lineFloat->setText(QString("%1").number(transf.f));
     }
 }
 void MainWindow::on_lineFloat_1_textChanged(const QString &arg1)
@@ -2071,8 +1309,7 @@ void MainWindow::spanRequest()
         req.insert(i,' ');
     }
     ui->lineRequest->setText(req);
-    QLabel* pLabel = ui->label_3;
-    pLabel->setStyleSheet("QLabel{background-color :rgba(255,0,0,200);border-radius:10px;}");
+    ui->label_3->setStyleSheet(styleSheetCalibrationBad);
     inBytesExpected = int(ui->spinBox->value())+7+2*int(ui->checkLongFrame->checkState());
     timerCalibration->start(50);
     sendRequest();
@@ -2082,14 +1319,14 @@ void MainWindow::indicateCalibrationSpan()
 
     if(answerIsGet)
     {
-        ui->label_3->setStyleSheet("QLabel{background-color :rgba(0,255,0,200);border-radius:10px;}");
+        ui->label_3->setStyleSheet(styleSheetCalibrationOk);
         countIndicateCalibration = 0;
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
-        ui->label_3->setStyleSheet("QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}");
+        ui->label_3->setStyleSheet(styleSheetCalibrationDefault);
         timerCalibration->stop();
         disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationSpan);
     }
@@ -2111,8 +1348,7 @@ void MainWindow::zeroRequest()
         req.insert(i,' ');
     }
     ui->lineRequest->setText(req);
-    QLabel* pLabel = ui->label_4;
-    pLabel->setStyleSheet("QLabel{background-color :rgba(255,0,0,200);border-radius:10px;}");
+    ui->label_4->setStyleSheet(styleSheetCalibrationBad);
     inBytesExpected = int(ui->spinBox->value())+7+2*int(ui->checkLongFrame->checkState());
     timerCalibration->start(50);
     sendRequest();
@@ -2122,14 +1358,14 @@ void MainWindow::indicateCalibrationZero()
 
     if(answerIsGet)
     {
-        ui->label_4->setStyleSheet("QLabel{background-color :rgba(0,255,0,200);border-radius:10px;}");
+        ui->label_4->setStyleSheet(styleSheetCalibrationOk);
         countIndicateCalibration = 0;
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
-        ui->label_4->setStyleSheet("QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}");
+        ui->label_4->setStyleSheet(styleSheetCalibrationDefault);
         timerCalibration->stop();
         disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZero);
     }
@@ -2151,8 +1387,7 @@ void MainWindow::zeroFirstVarRequest()
         req.insert(i,' ');
     }
     ui->lineRequest->setText(req);
-    QLabel* pLabel = ui->label_5;
-    pLabel->setStyleSheet("QLabel{background-color :rgba(255,0,0,200);border-radius:10px;}");
+    ui->label_5->setStyleSheet(styleSheetCalibrationBad);
     inBytesExpected = int(ui->spinBox->value())+7+2*int(ui->checkLongFrame->checkState());
     timerCalibration->start(50);
     sendRequest();
@@ -2162,16 +1397,29 @@ void MainWindow::indicateCalibrationZeroFirstVar()
 
     if(answerIsGet)
     {
-        ui->label_5->setStyleSheet("QLabel{background-color :rgba(0,255,0,200);border-radius:10px;}");
+        ui->label_5->setStyleSheet(styleSheetCalibrationOk);
         countIndicateCalibration = 0;
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
-        ui->label_5->setStyleSheet("QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}");
+        ui->label_5->setStyleSheet(styleSheetCalibrationBad);
         timerCalibration->stop();
         disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZeroFirstVar);
     }
     countIndicateCalibration++;
+}
+
+void MainWindow::checkPassword()
+{
+    QString gh = ui->linePassword->text();
+    if (gh =="1234")
+    {
+        ui->tabWidget->setCurrentIndex(0);
+        ui->tabWidget->setTabEnabled(0,true);
+    }else
+    {
+        ui->tabWidget->setTabEnabled(0,false);
+    }
 }

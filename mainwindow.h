@@ -76,6 +76,7 @@ private slots:
     void indicateCalibrationSpan();
     void indicateCalibrationZero();
     void indicateCalibrationZeroFirstVar();
+    void checkPassword();
 private:
     Ui::MainWindow *ui;
     QSerialPort *serial = nullptr;
