@@ -15,9 +15,16 @@
 #include <QFile>
 #define private public
 
-static QString styleSheetCalibrationDefault = "QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}";
-static QString styleSheetCalibrationOk = "QLabel{background-color :rgba(0,255,0,200);border-radius:10px;}";
-static QString styleSheetCalibrationBad = "QLabel{background-color :rgba(255,0,0,200);border-radius:10px;}";
+static QString styleSheetCalibrationDefault =           "QLabel{background-color :rgba(255,0,0,100);border-radius:10px;}";
+static QString styleSheetCalibrationOk =                "QLabel{background-color :rgba(0,255,0,200);border-radius:10px;}";
+static QString styleSheetCalibrationBad =               "QLabel{background-color :rgba(255,0,0,200);border-radius:10px;}";
+static QString styleSheetCalibrationLineEditDefault =   "QLineEdit{background-color :rgba(0,0,0,0);}";
+static QString styleSheetCalibrationLineEditBad =       "QLineEdit{background-color :rgba(255,0,0,50);}";
+static QString styleSheetCalibrationLineEditGood =      "QLineEdit{background-color :rgba(0,255,0,50);}";
+static QString styleSheetCalibrationSpinBoxDefault =    "QSpinBox{background-color :rgba(0,0,0,0);}";
+static QString styleSheetCalibrationSpinBoxBad =        "QSpinBox{background-color :rgba(255,0,0,50);}";
+static QString styleSheetCalibrationSpinBoxGood =       "QSpinBox{background-color :rgba(0,255,0,50);}";
+
 
 //QThread::msleep(5000);
 static bool PortOpen;
@@ -69,7 +76,6 @@ void ResetAddress()
     comboBoxAddress->addItem("0f",15);
     comboBoxAddress->setCurrentIndex(14);
 }
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -144,7 +150,14 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(ui->buttonSpan,             &QPushButton::clicked,  this,   &MainWindow::spanRequest);          //slot button for sending Span request for tab Calibration
         connect(ui->buttonZero,             &QPushButton::clicked,  this,   &MainWindow::zeroRequest);          //slot button for sending Zero request for tab Calibration
         connect(ui->buttonZeroFirstVar,     &QPushButton::clicked,  this,   &MainWindow::zeroFirstVarRequest);  //slot button for sending request zero first variable for tab Calibration
-        connect(ui->linePassword,           &QLineEdit::textEdited,this,&MainWindow::checkPassword);
+        connect(ui->linePassword,           &QLineEdit::textEdited, this,   &MainWindow::checkPassword);
+        connect(ui->buttonChangeAddress,    &QPushButton::clicked,  this,   &MainWindow::changeAddress);
+        connect(ui->buttonSetMaxValue,      &QPushButton::clicked,  this,   &MainWindow::setMaxValue);
+        connect(ui->buttonMovingAverage_1,  &QPushButton::clicked,  this,   &MainWindow::setMovingAverage_1);
+        connect(ui->buttonMovingAverage_3,  &QPushButton::clicked,  this,   &MainWindow::setMovingAverage_2);
+        connect(ui->buttonSetA_40,          &QPushButton::clicked,  this,   &MainWindow::setA_40);
+        connect(ui->buttonSetA_41,          &QPushButton::clicked,  this,   &MainWindow::setA_41);
+        connect(ui->buttonSetA_42,          &QPushButton::clicked,  this,   &MainWindow::setA_42);
         ResetAddressInit();
         timer->stop();
         timerFunction3->stop();
@@ -706,7 +719,7 @@ void MainWindow::stopLoop()//timer stop
 {
     timer->stop();
 }
-void MainWindow::on_comboBoxFunc_currentIndexChanged(int index)//отклик на изменение функции
+void MainWindow::on_comboBoxFunc_currentIndexChanged()//отклик на изменение функции
 {
     NumFunc = ui->comboBoxFunc->currentData().toInt();
     switch (NumFunc) {
@@ -789,7 +802,7 @@ void MainWindow::on_checkLongFrame_stateChanged(int arg1)//отклик на д�
     changedInByteExpected();
     getRequestAddr();
 }
-void MainWindow::on_checkEnTextBrows_stateChanged(int arg1)//отключение текстовго редктора
+void MainWindow::on_checkEnTextBrows_stateChanged(int arg1)//отклsючение текстовго редктора
 {
     if(arg1==0){
         ui->textEdit->setEnabled(false);
@@ -869,7 +882,7 @@ void MainWindow::on_spinData91_valueChanged(int arg1)//разрешение вв
         lineFloat->setText(QString("%1").number(transf.f));
     }
 }
-void MainWindow::on_lineFloat_1_textChanged(const QString &arg1)
+void MainWindow::on_lineFloat_1_textChanged()
 {
     float re = ui->lineFloat_1->text().toFloat();
     union{
@@ -884,7 +897,7 @@ void MainWindow::on_lineFloat_1_textChanged(const QString &arg1)
     ui->lineFloat_1_Byte_3->setText(QByteArray(1,transf.ie[1]).toHex());
     ui->lineFloat_1_Byte_4->setText(QByteArray(1,transf.ie[0]).toHex());
 }
-void MainWindow::on_lineFloat_2_textChanged(const QString &arg1)
+void MainWindow::on_lineFloat_2_textChanged()
 {
     float re = ui->lineFloat_2->text().toFloat();
     union{
@@ -899,7 +912,7 @@ void MainWindow::on_lineFloat_2_textChanged(const QString &arg1)
     ui->lineFloat_2_Byte_3->setText(QByteArray(1,transf.ie[1]).toHex());
     ui->lineFloat_2_Byte_4->setText(QByteArray(1,transf.ie[0]).toHex());
 }
-void MainWindow::on_lineFloat_3_textChanged(const QString &arg1)
+void MainWindow::on_lineFloat_3_textChanged()
 {
     float re = ui->lineFloat_3->text().toFloat();
     union{
@@ -913,7 +926,7 @@ void MainWindow::on_lineFloat_3_textChanged(const QString &arg1)
     ui->lineFloat_3_Byte_3->setText(QByteArray(1,transf.ie[1]).toHex());
     ui->lineFloat_3_Byte_4->setText(QByteArray(1,transf.ie[0]).toHex());
 }
-void MainWindow::on_lineFloat_4_textChanged(const QString &arg1)
+void MainWindow::on_lineFloat_4_textChanged()
 {
     float re = ui->lineFloat_4->text().toFloat();
     union{
@@ -928,7 +941,7 @@ void MainWindow::on_lineFloat_4_textChanged(const QString &arg1)
     ui->lineFloat_4_Byte_3->setText(QByteArray(1,transf.ie[1]).toHex());
     ui->lineFloat_4_Byte_4->setText(QByteArray(1,transf.ie[0]).toHex());
 }
-void MainWindow::on_lineFloat_5_textChanged(const QString &arg1)
+void MainWindow::on_lineFloat_5_textChanged()
 {
     float re = ui->lineFloat_5->text().toFloat();
     union{
@@ -943,7 +956,7 @@ void MainWindow::on_lineFloat_5_textChanged(const QString &arg1)
     ui->lineFloat_5_Byte_3->setText(QByteArray(1,transf.ie[1]).toHex());
     ui->lineFloat_5_Byte_4->setText(QByteArray(1,transf.ie[0]).toHex());
 }
-void MainWindow::on_lineFloat_6_textChanged(const QString &arg1)
+void MainWindow::on_lineFloat_6_textChanged()
 {
     float re = ui->lineFloat_6->text().toFloat();
     union{
@@ -1443,4 +1456,242 @@ void MainWindow::checkPassword()
         ui->tabWidget->setCurrentIndex(1);
         //ui->tabWidget->setTabEnabled(0,false);
     }
+}
+
+void MainWindow::calibrationFunctions(unsigned char *data,int numberData)
+{
+    request a;
+    a.setLongFrame(0);
+    a.setPreambleLength(ui->spinBox->value());
+    a.setAddress(ReqAddr);
+    a.function91(data,numberData);
+    QByteArray req = QByteArray(a.getRequest(),a.getRequestLength()).toHex();
+    int i = 0;
+    for(i = 2; i<req.length();i+=3){
+        req.insert(i,' ');
+    }
+    ui->lineRequest->setText(req);
+    inBytesExpected = int(ui->spinBox->value())+9+2*int(ui->checkLongFrame->checkState());
+    sendRequest();
+}
+
+void MainWindow::changeAddress()
+{
+    if(ui->lineEditChangeAddress->text().length() == 2)
+    {
+        unsigned char *dataChangeAddress = new unsigned char [2];
+        QByteArray text = ui->lineEditChangeAddress->text().toLocal8Bit();
+        QByteArray hex = QByteArray::fromHex(text);
+        dataChangeAddress[0] = 0x03;
+        dataChangeAddress[1] = hex[0];
+        calibrationFunctions(dataChangeAddress,2);
+    }
+}
+void MainWindow::setMaxValue()
+{
+    ui->lineEditSetMaxValue->setStyleSheet(styleSheetCalibrationLineEditBad);
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue);
+    float re = ui->lineEditSetMaxValue->text().toFloat();
+    union{
+        float f;
+        char ie[4];
+
+    }transf;
+    transf.f = re;
+    unsigned char *maxValue = new unsigned char [5];
+    maxValue[0] = 0x1e;
+    maxValue[1] = transf.ie[3];
+    maxValue[2] = transf.ie[2];
+    maxValue[3] = transf.ie[1];
+    maxValue[4] = transf.ie[0];
+    timerCalibration->start(50);
+    calibrationFunctions(maxValue,5);
+}
+void MainWindow::indicateSetMaxValue()
+{
+    if(answerIsGet)
+    {
+        ui->lineEditSetMaxValue->setStyleSheet(styleSheetCalibrationLineEditGood);
+        countIndicateCalibration = 0;
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->lineEditSetMaxValue->setStyleSheet(styleSheetCalibrationLineEditDefault);
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
+}
+void MainWindow::setMovingAverage_1()
+{
+    ui->spinBoxMovingAverage_1->setStyleSheet(styleSheetCalibrationSpinBoxBad);
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_1);
+    unsigned char *dataChangeAddress = new unsigned char [2];
+    dataChangeAddress[0] = 0x0b;
+    dataChangeAddress[1] = (unsigned char)ui->spinBoxMovingAverage_1->value();
+    timerCalibration->start(50);
+    calibrationFunctions(dataChangeAddress,2);
+}
+void MainWindow::indicateSetMovingAverage_1()
+{
+    if(answerIsGet)
+    {
+        ui->spinBoxMovingAverage_1->setStyleSheet(styleSheetCalibrationSpinBoxGood);
+        countIndicateCalibration = 0;
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_1);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->spinBoxMovingAverage_1->setStyleSheet(styleSheetCalibrationSpinBoxDefault);
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_1);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
+}
+void MainWindow::setMovingAverage_2()
+{
+    ui->spinBoxMovingAverage_2->setStyleSheet(styleSheetCalibrationSpinBoxBad);
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_2);
+    unsigned char *dataChangeAddress = new unsigned char [2];
+    dataChangeAddress[0] = 0x0d;
+    dataChangeAddress[1] = (unsigned char)ui->spinBoxMovingAverage_2->value();
+    timerCalibration->start(50);
+    calibrationFunctions(dataChangeAddress,2);
+}
+void MainWindow::indicateSetMovingAverage_2()
+{
+    if(answerIsGet)
+    {
+        ui->spinBoxMovingAverage_2->setStyleSheet(styleSheetCalibrationSpinBoxGood);
+        countIndicateCalibration = 0;
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_2);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->spinBoxMovingAverage_2->setStyleSheet(styleSheetCalibrationSpinBoxDefault);
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_2);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
+}
+void MainWindow::setA_40()
+{
+    ui->lineEditSetA_40->setStyleSheet(styleSheetCalibrationLineEditBad);
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_40);
+    float re = ui->lineEditSetA_40->text().toFloat();
+    union{
+        float f;
+        char ie[4];
+
+    }transf;
+    transf.f = re;
+    unsigned char *maxValue = new unsigned char [5];
+    maxValue[0] = 0x4e;
+    maxValue[1] = transf.ie[3];
+    maxValue[2] = transf.ie[2];
+    maxValue[3] = transf.ie[1];
+    maxValue[4] = transf.ie[0];
+    timerCalibration->start(50);
+    calibrationFunctions(maxValue,5);
+}
+void MainWindow::indicateSetA_40()
+{
+    if(answerIsGet)
+    {
+        ui->lineEditSetA_40->setStyleSheet(styleSheetCalibrationLineEditGood);
+        countIndicateCalibration = 0;
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_40);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->lineEditSetA_40->setStyleSheet(styleSheetCalibrationLineEditDefault);
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_40);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
+}
+void MainWindow::setA_41()
+{
+    ui->lineEditSetA_41->setStyleSheet(styleSheetCalibrationLineEditBad);
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_41);
+    float re = ui->lineEditSetA_41->text().toFloat();
+    union{
+        float f;
+        char ie[4];
+
+    }transf;
+    transf.f = re;
+    unsigned char *maxValue = new unsigned char [5];
+    maxValue[0] = 0x52;
+    maxValue[1] = transf.ie[3];
+    maxValue[2] = transf.ie[2];
+    maxValue[3] = transf.ie[1];
+    maxValue[4] = transf.ie[0];
+    timerCalibration->start(50);
+    calibrationFunctions(maxValue,5);
+}
+void MainWindow::indicateSetA_41()
+{
+    if(answerIsGet)
+    {
+        ui->lineEditSetA_41->setStyleSheet(styleSheetCalibrationLineEditGood);
+        countIndicateCalibration = 0;
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_41);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->lineEditSetA_41->setStyleSheet(styleSheetCalibrationLineEditDefault);
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_41);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
+}
+void MainWindow::setA_42()
+{
+    ui->lineEditSetA_42->setStyleSheet(styleSheetCalibrationLineEditBad);
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_42);
+    float re = ui->lineEditSetA_42->text().toFloat();
+    union{
+        float f;
+        char ie[4];
+
+    }transf;
+    transf.f = re;
+    unsigned char *maxValue = new unsigned char [5];
+    maxValue[0] = 0x56;
+    maxValue[1] = transf.ie[3];
+    maxValue[2] = transf.ie[2];
+    maxValue[3] = transf.ie[1];
+    maxValue[4] = transf.ie[0];
+    timerCalibration->start(50);
+    calibrationFunctions(maxValue,5);
+}
+void MainWindow::indicateSetA_42()
+{
+    if(answerIsGet)
+    {
+        ui->lineEditSetA_42->setStyleSheet(styleSheetCalibrationLineEditGood);
+        countIndicateCalibration = 0;
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_42);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->lineEditSetA_42->setStyleSheet(styleSheetCalibrationLineEditDefault);
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_42);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
 }
