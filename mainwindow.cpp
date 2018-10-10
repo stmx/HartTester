@@ -8,6 +8,7 @@
 #include <QStandardItem>
 #include <QTableView>
 #include <QString>
+#include <QStringRef>
 #include "QDebug"
 #include <QTimer>
 #include <QDateTime>
@@ -44,6 +45,8 @@ static int numberRow = 0;
 static QStandardItemModel *model = new QStandardItemModel;
 static QComboBox *comboBoxAddress;
 static int countIndicateCalibration = 0;
+static int lastFunc;
+static bool lastFrame;
 
 void ResetAddress()
 {
@@ -83,7 +86,7 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->buttonSend->setEnabled(!PortOpen);
         ui->checkEnTextBrows->setCheckState(Qt::Checked);
 
-        ui->tabWidget->setTabEnabled(0,false);
+        //ui->tabWidget->setTabEnabled(0,false);
 
         ui->label_3->setStyleSheet(styleSheetCalibrationDefault);
         ui->label_4->setStyleSheet(styleSheetCalibrationDefault);
@@ -147,10 +150,109 @@ MainWindow::MainWindow(QWidget *parent) :
         timerFunction3->stop();
         timerFunction3Loop->stop();
         timerFindDevice->stop();
+
+
+
+
+        QString fileDir = QString("GhStatus.txt");
+        QFile file1(fileDir);
+        if(!file1.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+
+        }
+        char *h =new char[2];
+        QByteArray ffff = file1.readAll();
+
+        QString hhhh(ffff);
+        file1.close();
+        int k = 0;
+        int countVar = 0;
+        int pos =0;
+        int len =0;
+        QStringRef subString;
+        QString req51;
+        for(k=0;k<hhhh.length();k++)
+        {
+            if(hhhh[k] == 0x0020)
+            {
+                subString=QStringRef(&hhhh, pos, len);
+
+                switch (countVar) {
+                    case 0:
+                        ui->comboBoxAddress->setCurrentText(subString.toString());
+                    break;
+                    case 1:
+                        lastFunc = subString.toString().toInt();
+                        ui->comboBoxFunc->setCurrentIndex(subString.toString().toInt());
+                    break;
+                    case 2:
+                        ui->spinBox->setValue(subString.toString().toInt());
+                    break;
+                    case 3:
+                        if(subString.toString().toInt() == 1)
+                        {
+                            ui->checkLongFrame->setCheckState(Qt::Checked);
+                        }
+                        else
+                        {
+                            ui->checkLongFrame->setCheckState(Qt::Unchecked);
+                        }
+                    break;
+                    case 4:
+                        ui->tabWidget->setCurrentIndex(subString.toString().toInt());
+                    break;
+                    case 5:
+                        ui->spinData91->setValue(subString.toString().toInt());
+                    break;
+                    case 6:
+                        ui->lineAddr91->setText(subString.toString());
+                    break;
+                    case 7:
+                        req51 = subString.toString()+" ";
+                    break;
+                    case 8:
+                        ui->lineEdit_2->setText(req51+subString.toString());
+                    break;
+                }
+                pos =k+1;
+                len =0;
+                countVar++;
+                continue;
+            }
+            len++;
+        }
+
+        ui->comboBoxAddress->setCurrentText(subString.toString());
+
+
         getRequestAddr();
     }
 MainWindow::~MainWindow()
 {
+    QString fileDir = QString("GhStatus.txt");
+    QFile file1(fileDir);
+    if(!file1.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+
+    }
+    QString saveVar;
+    QString ad = ui->comboBoxAddress->currentText();        saveVar = ad+" ";
+    ad = QString::number(ui->comboBoxFunc->currentIndex()); saveVar =saveVar+ad+" ";
+    ad = ui->spinBox->text();                               saveVar =saveVar+ad+" ";
+    if(ui->checkLongFrame->checkState())
+    {
+        ad = "1";
+    }else
+    {
+        ad = "0";
+    }                                                       saveVar =saveVar+ad+" ";
+    ad = QString::number(ui->tabWidget->currentIndex());    saveVar =saveVar+ad+" ";
+    ad = ui->spinData91->text();                            saveVar =saveVar+ad+" ";
+    ad = ui->lineAddr91->text();                            saveVar =saveVar+ad+" ";
+    ad = ui->lineEdit_2->text();                            saveVar =saveVar+ad+" ";
+    QByteArray d = saveVar.toUtf8();
+    file1.write(d);
+    file1.close();
     serial->close();
     delete ui;
 }
@@ -607,9 +709,9 @@ void MainWindow::stopLoop()//timer stop
 void MainWindow::on_comboBoxFunc_currentIndexChanged(int index)//отклик на изменение функции
 {
     NumFunc = ui->comboBoxFunc->currentData().toInt();
-
     switch (NumFunc) {
         case 0:
+            lastFrame = ui->checkLongFrame->checkState();
             ui->checkLongFrame->setCheckState(Qt::Unchecked);
             ui->checkLongFrame->setEnabled(false);
             ui->checkAltView->setEnabled(false);
@@ -618,12 +720,21 @@ void MainWindow::on_comboBoxFunc_currentIndexChanged(int index)//отклик н
             break;
         case 3:
             //ui->checkLongFrame->setCheckState(Qt::Checked);
+            if(lastFrame)
+            {
+                ui->checkLongFrame->setCheckState(Qt::Checked);
+            }
+            else
+            {
+                ui->checkLongFrame->setCheckState(Qt::Unchecked);
+            }
             ui->checkLongFrame->setEnabled(true);
             ui->checkAltView->setEnabled(false);
             ui->checkAltView->setCheckState(Qt::Unchecked);
             break;
         case 36:
             //ui->checkLongFrame->setCheckState(Qt::Checked);
+            lastFrame = ui->checkLongFrame->checkState();
             ui->checkLongFrame->setEnabled(true);
             ui->checkAltView->setEnabled(false);
             ui->checkAltView->setCheckState(Qt::Unchecked);
@@ -950,11 +1061,14 @@ void MainWindow::on_tabWidget_currentChanged(int index)
 {
     changedInByteExpected();
     switch (index) {
-        case 0:
-            ui->comboBoxFunc->setCurrentIndex(0);
+        case 0:        
+            ui->comboBoxFunc->setCurrentIndex(lastFunc);
+            //ui->comboBoxFunc->setCurrentIndex(0);
             getRequestAddr();
             break;
-        case 1:ui->comboBoxFunc->setCurrentIndex(1); break;
+        case 1:
+            lastFunc = ui->comboBoxFunc->currentIndex();
+            ui->comboBoxFunc->setCurrentIndex(1); break;
     }
 }
 void MainWindow::on_lineAddrShort_textChanged()
@@ -1181,11 +1295,23 @@ void MainWindow::sendFindRequest()//создание запроса на пои�
 void MainWindow::on_comboBoxAddress_highlighted(const QString &arg1)
 {
         getRequestAddr();
+        ui->comboBoxAddressFunc3_1->setCurrentIndex(ui->comboBoxAddress->currentIndex());
+        ui->comboBoxAddressFunc3_2->setCurrentIndex(ui->comboBoxAddress->currentIndex());
+        ui->comboBoxAddressFunc3_3->setCurrentIndex(ui->comboBoxAddress->currentIndex());
+        ui->comboBoxAddressFunc3_4->setCurrentIndex(ui->comboBoxAddress->currentIndex());
+        ui->comboBoxAddressFunc3_5->setCurrentIndex(ui->comboBoxAddress->currentIndex());
+        ui->comboBoxAddressFunc3_5->setCurrentIndex(ui->comboBoxAddress->currentIndex());
 }
 
 void MainWindow::on_comboBoxAddress_currentIndexChanged(int index)
 {
         getRequestAddr();
+        ui->comboBoxAddressFunc3_1->setCurrentIndex(ui->comboBoxAddress->currentIndex());
+        ui->comboBoxAddressFunc3_2->setCurrentIndex(ui->comboBoxAddress->currentIndex());
+        ui->comboBoxAddressFunc3_3->setCurrentIndex(ui->comboBoxAddress->currentIndex());
+        ui->comboBoxAddressFunc3_4->setCurrentIndex(ui->comboBoxAddress->currentIndex());
+        ui->comboBoxAddressFunc3_5->setCurrentIndex(ui->comboBoxAddress->currentIndex());
+        ui->comboBoxAddressFunc3_5->setCurrentIndex(ui->comboBoxAddress->currentIndex());
 }
 
 void MainWindow::spanRequest()
@@ -1311,10 +1437,10 @@ void MainWindow::checkPassword()
     if (gh =="1234")
     {
         ui->tabWidget->setCurrentIndex(0);
-        ui->tabWidget->setTabEnabled(0,true);
+        //ui->tabWidget->setTabEnabled(0,true);
     }else
     {
         ui->tabWidget->setCurrentIndex(1);
-        ui->tabWidget->setTabEnabled(0,true);
+        //ui->tabWidget->setTabEnabled(0,false);
     }
 }
