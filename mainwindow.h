@@ -78,19 +78,44 @@ private slots:
     void indicateCalibrationZeroFirstVar();
     void checkPassword();
     void calibrationFunctions(unsigned char *data,int numberData);
+    void calibrationFunctionsGet(unsigned char *data1,int numberData1);
     void changeAddress();
+
     void setMaxValue();
-    void indicateSetMaxValue();
     void setMovingAverage_1();
-    void indicateSetMovingAverage_1();
     void setMovingAverage_2();
-    void indicateSetMovingAverage_2();
     void setA_40();
-    void indicateSetA_40();
     void setA_41();
-    void indicateSetA_41();
     void setA_42();
+
+    void getMaxValue();
+    void getMovingAverage_1();
+    void getMovingAverage_2();
+    void getA_40();
+    void getA_41();
+    void getA_42();
+
+    void indicateSetMaxValue();    
+    void indicateSetMovingAverage_1();    
+    void indicateSetMovingAverage_2();    
+    void indicateSetA_40();
+    void indicateSetA_41();    
     void indicateSetA_42();
+
+    void indicateGetMaxValue();
+    void indicateGetMovingAverage_1();
+    void indicateGetMovingAverage_2();
+    void indicateGetA_40();
+    void indicateGetA_41();
+    void indicateGetA_42();
+
+
+    void on_checkBoxFixedCurrent_stateChanged();
+    void indicateStateFixedCurren();
+
+    void setValueFixedCurrent();
+    void indicateSetValueFixedCurrent();
+
 private:
     Ui::MainWindow *ui;
     QSerialPort *serial = nullptr;
