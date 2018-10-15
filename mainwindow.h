@@ -82,6 +82,7 @@ private slots:
     void changeAddress();
 
     void setMaxValue();
+    void setMaxValue_2();
     void setMovingAverage_1();
     void setMovingAverage_2();
     void setA_40();
@@ -89,13 +90,17 @@ private slots:
     void setA_42();
 
     void getMaxValue();
+    void getMaxValue_2();
     void getMovingAverage_1();
     void getMovingAverage_2();
     void getA_40();
     void getA_41();
     void getA_42();
+    void getCurrent();
+    void getPressue();
 
-    void indicateSetMaxValue();    
+    void indicateSetMaxValue();
+    void indicateSetMaxValue_2();
     void indicateSetMovingAverage_1();    
     void indicateSetMovingAverage_2();    
     void indicateSetA_40();
@@ -103,11 +108,14 @@ private slots:
     void indicateSetA_42();
 
     void indicateGetMaxValue();
+    void indicateGetMaxValue_2();
     void indicateGetMovingAverage_1();
     void indicateGetMovingAverage_2();
     void indicateGetA_40();
     void indicateGetA_41();
     void indicateGetA_42();
+    void indicateGetCurrent();
+    void indicateGetPressue();
 
 
     void on_checkBoxFixedCurrent_stateChanged();

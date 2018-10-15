@@ -117,16 +117,16 @@ MainWindow::MainWindow(QWidget *parent) :
         ////on_comboBoxFunc_currentIndexChanged///
         //////////////////////////////////////////
         ////////////////////////////////////////// */
-        ui->comboBoxFunc->addItem("Function 0",0);
-        ui->comboBoxFunc->addItem("Function 3",3);
+        ui->comboBoxFunc->addItem("0.Считать уникальный идентификатор",0);
+        ui->comboBoxFunc->addItem("3.Считать ток и значение четырех динамических переменных",3);
         //ui->comboBoxFunc->addItem("Function 13",13);
         //ui->comboBoxFunc->addItem("Function 35",35);
-        ui->comboBoxFunc->addItem("Function 36",36);
-        ui->comboBoxFunc->addItem("Function 37",37);
-        ui->comboBoxFunc->addItem("Function 43",43);
+        ui->comboBoxFunc->addItem("36.Установить верхнее значение диапазона",36);
+        ui->comboBoxFunc->addItem("37.Установить нижнее значение диапазона ",37);
+        ui->comboBoxFunc->addItem("43.Установить нуль первичной переменной",43);
         //ui->comboBoxFunc->addItem("Function 45",45);
-        ui->comboBoxFunc->addItem("Function 51",51);
-        ui->comboBoxFunc->addItem("Function 91",91);
+        ui->comboBoxFunc->addItem("51.Чтение нескольких регистров",51);
+        ui->comboBoxFunc->addItem("91.Записть нескольких регистров",91);
 
         comboBoxAddress = ui->comboBoxAddress;
 
@@ -153,19 +153,23 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(ui->buttonZeroFirstVar,     &QPushButton::clicked,  this,   &MainWindow::zeroFirstVarRequest);  //slot button for sending request zero first variable for tab Calibration
         connect(ui->linePassword,           &QLineEdit::textEdited, this,   &MainWindow::checkPassword);
         connect(ui->buttonChangeAddress,    &QPushButton::clicked,  this,   &MainWindow::changeAddress);
-        connect(ui->buttonSetMaxValue,      &QPushButton::clicked,  this,   &MainWindow::setMaxValue);        
+        connect(ui->buttonSetMaxValue,      &QPushButton::clicked,  this,   &MainWindow::setMaxValue);
+        connect(ui->buttonSetMaxValue_2,    &QPushButton::clicked,  this,   &MainWindow::setMaxValue_2);
         connect(ui->buttonMovingAverage_1,  &QPushButton::clicked,  this,   &MainWindow::setMovingAverage_1);
         connect(ui->buttonMovingAverage_2,  &QPushButton::clicked,  this,   &MainWindow::setMovingAverage_2);
         connect(ui->buttonSetA_40,          &QPushButton::clicked,  this,   &MainWindow::setA_40);
         connect(ui->buttonSetA_41,          &QPushButton::clicked,  this,   &MainWindow::setA_41);
         connect(ui->buttonSetA_42,          &QPushButton::clicked,  this,   &MainWindow::setA_42);        
         connect(ui->buttonGetMaxValue,      &QPushButton::clicked,  this,   &MainWindow::getMaxValue);
+        connect(ui->buttonGetMaxValue_2,    &QPushButton::clicked,  this,   &MainWindow::getMaxValue_2);
         connect(ui->buttonGetMovingAverage_1,&QPushButton::clicked, this,   &MainWindow::getMovingAverage_1);
         connect(ui->buttonGetMovingAverage_2,&QPushButton::clicked, this,   &MainWindow::getMovingAverage_2);
         connect(ui->buttonGetA_40,          &QPushButton::clicked,  this,   &MainWindow::getA_40);
         connect(ui->buttonGetA_41,          &QPushButton::clicked,  this,   &MainWindow::getA_41);
         connect(ui->buttonGetA_42,          &QPushButton::clicked,  this,   &MainWindow::getA_42);
         connect(ui->buttonSetFixedCurrent,  &QPushButton::clicked,  this,   &MainWindow::setValueFixedCurrent);
+        connect(ui->buttonGetCurrent,       &QPushButton::clicked,  this,   &MainWindow::getCurrent);
+        connect(ui->buttonGetPressue,       &QPushButton::clicked,  this,   &MainWindow::getPressue);
         ResetAddressInit();
         timer->stop();
         timerFunction3->stop();
@@ -1534,6 +1538,26 @@ void MainWindow::setMaxValue()
     timerCalibration->start(50);
     calibrationFunctions(maxValue,5);
 }
+void MainWindow::setMaxValue_2()
+{
+    ui->lineEditSetMaxValue_2->setStyleSheet(styleSheetCalibrationLineEditBad);
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue_2);
+    float re = ui->lineEditSetMaxValue_2->text().toFloat();
+    union{
+        float f;
+        char ie[4];
+
+    }transf;
+    transf.f = re;
+    unsigned char *maxValue = new unsigned char [5];
+    maxValue[0] = 0x22;
+    maxValue[1] = transf.ie[3];
+    maxValue[2] = transf.ie[2];
+    maxValue[3] = transf.ie[1];
+    maxValue[4] = transf.ie[0];
+    timerCalibration->start(50);
+    calibrationFunctions(maxValue,5);
+}
 void MainWindow::setMovingAverage_1()
 {
     ui->spinBoxMovingAverage_1->setStyleSheet(styleSheetCalibrationSpinBoxBad);
@@ -1624,6 +1648,15 @@ void MainWindow::getMaxValue()
     timerCalibration->start(50);
     calibrationFunctionsGet(data,5);
 }
+void MainWindow::getMaxValue_2()
+{
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMaxValue_2);
+    unsigned char *data = new unsigned char [2];
+    data[0] = 0x22;
+    data[1] = 0x04;
+    timerCalibration->start(50);
+    calibrationFunctionsGet(data,5);
+}
 void MainWindow::getMovingAverage_1()
 {
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMovingAverage_1);
@@ -1669,6 +1702,24 @@ void MainWindow::getA_42()
     timerCalibration->start(50);
     calibrationFunctionsGet(data,5);
 }
+void MainWindow::getPressue()
+{
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetPressue);
+    unsigned char *data = new unsigned char [2];
+    data[0] = 0xcc;
+    data[1] = 0x04;
+    timerCalibration->start(50);
+    calibrationFunctionsGet(data,5);
+}
+void MainWindow::getCurrent()
+{
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetCurrent);
+    unsigned char *data = new unsigned char [2];
+    data[0] = 0xc8;
+    data[1] = 0x04;
+    timerCalibration->start(50);
+    calibrationFunctionsGet(data,5);
+}
 
 void MainWindow::indicateSetMaxValue()
 {
@@ -1684,6 +1735,24 @@ void MainWindow::indicateSetMaxValue()
         countIndicateCalibration = 0;
         ui->lineEditSetMaxValue->setStyleSheet(styleSheetCalibrationLineEditDefault);
         disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
+}
+void MainWindow::indicateSetMaxValue_2()
+{
+    if(answerIsGet)
+    {
+        ui->lineEditSetMaxValue_2->setStyleSheet(styleSheetCalibrationLineEditGood);
+        countIndicateCalibration = 0;
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue_2);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->lineEditSetMaxValue_2->setStyleSheet(styleSheetCalibrationLineEditDefault);
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue_2);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
@@ -1808,6 +1877,39 @@ void MainWindow::indicateGetMaxValue()
 
         ui->lineEditMaxValueGet->setText(QString("Bad Crc"));
         disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMaxValue);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
+}
+void MainWindow::indicateGetMaxValue_2()
+{
+    if(answerIsGet)
+    {
+        countIndicateCalibration = 0;
+        answer b(inBytesExpected);
+        b.createAnswer(ansGet,inBytesExpected);
+        b.analysis();
+        char *zData = new char [5];
+        zData = b.getData();
+        union{
+            float f;
+            char ie[4];
+
+        }transf;
+        transf.ie[0] = zData[3];
+        transf.ie[1] = zData[2];
+        transf.ie[2] = zData[1];
+        transf.ie[3] = zData[0];
+        ui->lineEditMaxValueGet_2->setText(QString().number(transf.f));
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMaxValue_2);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+
+        ui->lineEditMaxValueGet_2->setText(QString("Bad Crc"));
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMaxValue_2);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
@@ -1952,6 +2054,70 @@ void MainWindow::indicateGetA_42()
         countIndicateCalibration = 0;
         ui->lineEditGetA_42->setText(QString("Bad Crc"));
         disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetA_42);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
+}
+void MainWindow::indicateGetPressue()
+{
+    if(answerIsGet)
+    {
+        countIndicateCalibration = 0;
+        answer b(inBytesExpected);
+        b.createAnswer(ansGet,inBytesExpected);
+        b.analysis();
+        char *zData = new char [5];
+        zData = b.getData();
+        union{
+            float f;
+            char ie[4];
+
+        }transf;
+        transf.ie[0] = zData[3];
+        transf.ie[1] = zData[2];
+        transf.ie[2] = zData[1];
+        transf.ie[3] = zData[0];
+        ui->lineEditGetPressue->setText(QString().number(transf.f));
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetPressue);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->lineEditGetPressue->setText(QString("Bad Crc"));
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetPressue);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
+}
+void MainWindow::indicateGetCurrent()
+{
+    if(answerIsGet)
+    {
+        countIndicateCalibration = 0;
+        answer b(inBytesExpected);
+        b.createAnswer(ansGet,inBytesExpected);
+        b.analysis();
+        char *zData = new char [5];
+        zData = b.getData();
+        union{
+            float f;
+            char ie[4];
+
+        }transf;
+        transf.ie[0] = zData[3];
+        transf.ie[1] = zData[2];
+        transf.ie[2] = zData[1];
+        transf.ie[3] = zData[0];
+        ui->lineEditGetCurrent->setText(QString().number(transf.f));
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetCurrent);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->lineEditGetCurrent->setText(QString("Bad Crc"));
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetCurrent);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
