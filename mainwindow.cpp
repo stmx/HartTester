@@ -250,7 +250,7 @@ MainWindow::MainWindow(QWidget *parent) :
         //ui->comboBoxAddress->setCurrentText(subString.toString());
 
 
-        getRequestAddr();
+        getRequestAddr(ui->checkLongFrame->checkState());
     }
 MainWindow::~MainWindow()
 {
@@ -327,9 +327,9 @@ void MainWindow::createRequestOut(bool tr = false)
     }
     ui->lineRequest->setText(req);
 }
-void MainWindow::getRequestAddr()
+void MainWindow::getRequestAddr(bool b)
 {
-    if(!ui->checkLongFrame->checkState())
+    if(!b)
     {
         // textAddr = ui->lineAddrShort->text();
         QString textAddr = ui->comboBoxAddress->currentText();
@@ -799,7 +799,7 @@ void MainWindow::on_comboBoxFunc_currentIndexChanged()//отклик на изм
             break;
     }
     changedInByteExpected();
-    getRequestAddr();
+    getRequestAddr(ui->checkLongFrame->checkState());
 
 }
 void MainWindow::on_spinBox_valueChanged(int arg1)//изменение длины преамбулы
@@ -814,7 +814,7 @@ void MainWindow::on_checkLongFrame_stateChanged(int arg1)//отклик на д�
 {
     data91 = new unsigned char[int(ui->spinData91->value())+1];
     changedInByteExpected();
-    getRequestAddr();
+    getRequestAddr(ui->checkLongFrame->checkState());
 }
 void MainWindow::on_checkEnTextBrows_stateChanged(int arg1)//отклsючение текстовго редктора
 {
@@ -1091,7 +1091,7 @@ void MainWindow::on_tabWidget_currentChanged(int index)
         case 0:        
             ui->comboBoxFunc->setCurrentIndex(lastFunc);
             //ui->comboBoxFunc->setCurrentIndex(0);
-            getRequestAddr();
+            getRequestAddr(ui->checkLongFrame->checkState());
             break;
         case 1:
             lastFunc = ui->comboBoxFunc->currentIndex();
@@ -1100,11 +1100,11 @@ void MainWindow::on_tabWidget_currentChanged(int index)
 }
 void MainWindow::on_lineAddrShort_textChanged()
 {
-    getRequestAddr();
+    getRequestAddr(ui->checkLongFrame->checkState());
 }
 void MainWindow::on_lineAddrLong_textChanged()
 {
-    getRequestAddr();
+    getRequestAddr(ui->checkLongFrame->checkState());
 }
 void MainWindow::sendTimerRequest()
 {
@@ -1300,7 +1300,7 @@ void MainWindow::sendFindRequest()//создание запроса на пои�
         ui->comboBoxAddressFunc3_4->setEnabled(true);
         ui->comboBoxAddressFunc3_5->setEnabled(true);
         ui->textEdit->clear();
-        getRequestAddr();
+        getRequestAddr(ui->checkLongFrame->checkState());
     }else
     {
         request a;
@@ -1321,7 +1321,7 @@ void MainWindow::sendFindRequest()//создание запроса на пои�
 
 void MainWindow::on_comboBoxAddress_highlighted(const QString &arg1)
 {
-        getRequestAddr();
+        getRequestAddr(ui->checkLongFrame->checkState());
         ui->comboBoxAddressFunc3_1->setCurrentIndex(ui->comboBoxAddress->currentIndex());
         ui->comboBoxAddressFunc3_2->setCurrentIndex(ui->comboBoxAddress->currentIndex());
         ui->comboBoxAddressFunc3_3->setCurrentIndex(ui->comboBoxAddress->currentIndex());
@@ -1332,7 +1332,7 @@ void MainWindow::on_comboBoxAddress_highlighted(const QString &arg1)
 
 void MainWindow::on_comboBoxAddress_currentIndexChanged(int index)
 {
-        getRequestAddr();
+        getRequestAddr(ui->checkLongFrame->checkState());
         ui->comboBoxAddressFunc3_1->setCurrentIndex(ui->comboBoxAddress->currentIndex());
         ui->comboBoxAddressFunc3_2->setCurrentIndex(ui->comboBoxAddress->currentIndex());
         ui->comboBoxAddressFunc3_3->setCurrentIndex(ui->comboBoxAddress->currentIndex());
@@ -1475,8 +1475,9 @@ void MainWindow::checkPassword()
 void MainWindow::calibrationFunctions(unsigned char *data,int numberData)
 {
     request a;
-    a.setLongFrame(0);
+    a.setLongFrame(1);
     a.setPreambleLength(ui->spinBox->value());
+    getRequestAddr(true);
     a.setAddress(ReqAddr);
     a.function91(data,numberData);
     QByteArray req = QByteArray(a.getRequest(),a.getRequestLength()).toHex();
@@ -1485,7 +1486,8 @@ void MainWindow::calibrationFunctions(unsigned char *data,int numberData)
         req.insert(i,' ');
     }
     ui->lineRequest->setText(req);
-    inBytesExpected = int(ui->spinBox->value())+9+2*int(ui->checkLongFrame->checkState());
+    //inBytesExpected = int(ui->spinBox->value())+9+2*int(ui->checkLongFrame->checkState());
+    inBytesExpected = int(ui->spinBox->value())+13;
     sendRequest();
 }
 void MainWindow::calibrationFunctionsGet(unsigned char *data1,int numberData1)
@@ -1493,6 +1495,7 @@ void MainWindow::calibrationFunctionsGet(unsigned char *data1,int numberData1)
     request a;
     a.setLongFrame(0);
     a.setPreambleLength(ui->spinBox->value());
+    getRequestAddr(false);
     a.setAddress(ReqAddr);
     a.function51(data1);
     QByteArray req = QByteArray(a.getRequest(),a.getRequestLength()).toHex();
@@ -1501,7 +1504,8 @@ void MainWindow::calibrationFunctionsGet(unsigned char *data1,int numberData1)
         req.insert(i,' ');
     }
     ui->lineRequest->setText(req);
-    inBytesExpected = int(ui->spinBox->value())+numberData1+6+2*int(ui->checkLongFrame->checkState());
+    //inBytesExpected = int(ui->spinBox->value())+numberData1+6+2*int(ui->checkLongFrame->checkState());
+    inBytesExpected = int(ui->spinBox->value())+numberData1+6;
     sendRequest();
 }
 

@@ -51,7 +51,7 @@ private slots:
     void clearTable();
     void on_tabWidget_currentChanged(int index);
     void createRequestOut(bool tr);
-    void getRequestAddr();
+    void getRequestAddr(bool b);
     void changedInByteExpected();    
     void showHideTableRow(QString r, bool t);
     void ResetAddressInit();
