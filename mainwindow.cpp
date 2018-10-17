@@ -24,6 +24,9 @@ static QString styleSheetCalibrationLineEditGood =      "QLineEdit{background-co
 static QString styleSheetCalibrationSpinBoxDefault =    "QSpinBox{background-color :rgba(0,0,0,0);}";
 static QString styleSheetCalibrationSpinBoxBad =        "QSpinBox{background-color :rgba(255,0,0,50);}";
 static QString styleSheetCalibrationSpinBoxGood =       "QSpinBox{background-color :rgba(0,255,0,50);}";
+static QString styleSheetCalibrationComboBoxDefault =   "QComboBox{}";
+static QString styleSheetCalibrationComboBoxBad =       "QComboBox{background-color :rgba(255,0,0,50);}";
+static QString styleSheetCalibrationComboBoxGood =      "QComboBox{background-color :rgba(0,255,0,50);}";
 
 
 //QThread::msleep(5000);
@@ -128,6 +131,27 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->comboBoxFunc->addItem("51.Чтение нескольких регистров",51);
         ui->comboBoxFunc->addItem("91.Записть нескольких регистров",91);
 
+        ui->comboBoxSetAddress->clear();
+        ui->comboBoxSetAddress->addItem("00",0);
+        ui->comboBoxSetAddress->addItem("01",1);
+        ui->comboBoxSetAddress->addItem("02",2);
+        ui->comboBoxSetAddress->addItem("03",3);
+        ui->comboBoxSetAddress->addItem("04",4);
+        ui->comboBoxSetAddress->addItem("05",5);
+        ui->comboBoxSetAddress->addItem("06",6);
+        ui->comboBoxSetAddress->addItem("07",7);
+        ui->comboBoxSetAddress->addItem("08",8);
+        ui->comboBoxSetAddress->addItem("09",9);
+        ui->comboBoxSetAddress->addItem("0a",10);
+        ui->comboBoxSetAddress->addItem("0b",11);
+        ui->comboBoxSetAddress->addItem("0c",12);
+        ui->comboBoxSetAddress->addItem("0d",13);
+        ui->comboBoxSetAddress->addItem("0e",14);
+        ui->comboBoxSetAddress->addItem("0f",15);
+
+        ui->comboBoxSetMode->addItem("HART",2);
+        ui->comboBoxSetMode->addItem("RS-485",4);
+
         comboBoxAddress = ui->comboBoxAddress;
 
         connect(serial,                     &QSerialPort::readyRead,this,   &MainWindow::readData);             //slot recieve data from COM port
@@ -152,14 +176,17 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(ui->buttonZero,             &QPushButton::clicked,  this,   &MainWindow::zeroRequest);          //slot button for sending Zero request for tab Calibration
         connect(ui->buttonZeroFirstVar,     &QPushButton::clicked,  this,   &MainWindow::zeroFirstVarRequest);  //slot button for sending request zero first variable for tab Calibration
         connect(ui->linePassword,           &QLineEdit::textEdited, this,   &MainWindow::checkPassword);
-        connect(ui->buttonChangeAddress,    &QPushButton::clicked,  this,   &MainWindow::changeAddress);
+        connect(ui->buttonSetAddress,       &QPushButton::clicked,  this,   &MainWindow::setAddress);
+        connect(ui->buttonSetMode,          &QPushButton::clicked,  this,   &MainWindow::setMode);
         connect(ui->buttonSetMaxValue,      &QPushButton::clicked,  this,   &MainWindow::setMaxValue);
         connect(ui->buttonSetMaxValue_2,    &QPushButton::clicked,  this,   &MainWindow::setMaxValue_2);
         connect(ui->buttonMovingAverage_1,  &QPushButton::clicked,  this,   &MainWindow::setMovingAverage_1);
         connect(ui->buttonMovingAverage_2,  &QPushButton::clicked,  this,   &MainWindow::setMovingAverage_2);
         connect(ui->buttonSetA_40,          &QPushButton::clicked,  this,   &MainWindow::setA_40);
         connect(ui->buttonSetA_41,          &QPushButton::clicked,  this,   &MainWindow::setA_41);
-        connect(ui->buttonSetA_42,          &QPushButton::clicked,  this,   &MainWindow::setA_42);        
+        connect(ui->buttonSetA_42,          &QPushButton::clicked,  this,   &MainWindow::setA_42);
+        connect(ui->buttonGetAddress,       &QPushButton::clicked,  this,   &MainWindow::getAddress);
+        connect(ui->buttonGetMode,          &QPushButton::clicked,  this,   &MainWindow::getMode);
         connect(ui->buttonGetMaxValue,      &QPushButton::clicked,  this,   &MainWindow::getMaxValue);
         connect(ui->buttonGetMaxValue_2,    &QPushButton::clicked,  this,   &MainWindow::getMaxValue_2);
         connect(ui->buttonGetMovingAverage_1,&QPushButton::clicked, this,   &MainWindow::getMovingAverage_1);
@@ -1345,7 +1372,9 @@ void MainWindow::spanRequest()
 {
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationSpan);
     request a;
-    a.setLongFrame(0);
+    bool longFrame = false;
+    getRequestAddr(longFrame);
+    a.setLongFrame(longFrame);
     a.setPreambleLength(ui->spinBox->value());
     a.setAddress(ReqAddr);
     a.function36();
@@ -1384,7 +1413,9 @@ void MainWindow::zeroRequest()
 {
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZero);
     request a;
-    a.setLongFrame(0);
+    bool longFrame = false;
+    getRequestAddr(longFrame);
+    a.setLongFrame(longFrame);
     a.setPreambleLength(ui->spinBox->value());
     a.setAddress(ReqAddr);
     a.function37();
@@ -1423,7 +1454,9 @@ void MainWindow::zeroFirstVarRequest()
 {
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZeroFirstVar);
     request a;
-    a.setLongFrame(0);
+    bool longFrame = false;
+    getRequestAddr(longFrame);
+    a.setLongFrame(longFrame);
     a.setPreambleLength(ui->spinBox->value());
     a.setAddress(ReqAddr);
     a.function43();
@@ -1475,7 +1508,9 @@ void MainWindow::checkPassword()
 void MainWindow::calibrationFunctions(unsigned char *data,int numberData)
 {
     request a;
-    a.setLongFrame(1);
+    bool longFrame = true;
+    getRequestAddr(longFrame);
+    a.setLongFrame(longFrame);
     a.setPreambleLength(ui->spinBox->value());
     getRequestAddr(true);
     a.setAddress(ReqAddr);
@@ -1493,7 +1528,9 @@ void MainWindow::calibrationFunctions(unsigned char *data,int numberData)
 void MainWindow::calibrationFunctionsGet(unsigned char *data1,int numberData1)
 {
     request a;
-    a.setLongFrame(0);
+    bool longFrame = false;
+    getRequestAddr(longFrame);
+    a.setLongFrame(longFrame);
     a.setPreambleLength(ui->spinBox->value());
     getRequestAddr(false);
     a.setAddress(ReqAddr);
@@ -1509,19 +1546,30 @@ void MainWindow::calibrationFunctionsGet(unsigned char *data1,int numberData1)
     sendRequest();
 }
 
-void MainWindow::changeAddress()
+void MainWindow::setAddress()
 {
-    if(ui->lineEditChangeAddress->text().length() == 2)
-    {
-        unsigned char *dataChangeAddress = new unsigned char [2];
-        QByteArray text = ui->lineEditChangeAddress->text().toLocal8Bit();
-        QByteArray hex = QByteArray::fromHex(text);
-        dataChangeAddress[0] = 0x03;
-        dataChangeAddress[1] = hex[0];
-        calibrationFunctions(dataChangeAddress,2);
-    }
+    ui->comboBoxSetAddress->setStyleSheet(styleSheetCalibrationComboBoxBad);
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetAddress);
+    unsigned char *dataChangeAddress = new unsigned char [2];
+    QString textAddr = ui->comboBoxSetAddress->currentText();
+    QByteArray text =QByteArray(textAddr.toLocal8Bit());
+    QByteArray hex = QByteArray::fromHex(text);
+    dataChangeAddress[0] = 0x03;
+    dataChangeAddress[1] =(unsigned char)hex[0];
+    timerCalibration->start(50);
+    calibrationFunctions(dataChangeAddress,2);
 }
-
+void MainWindow::setMode()
+{
+    ui->comboBoxSetMode->setStyleSheet(styleSheetCalibrationComboBoxBad);
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMode);
+    unsigned char *dataChangeAddress = new unsigned char [2];
+    int textMode = ui->comboBoxSetMode->currentData().toInt();
+    dataChangeAddress[0] = 0x01;
+    dataChangeAddress[1] =(unsigned char)textMode;
+    timerCalibration->start(50);
+    calibrationFunctions(dataChangeAddress,2);
+}
 void MainWindow::setMaxValue()
 {
     ui->lineEditSetMaxValue->setStyleSheet(styleSheetCalibrationLineEditBad);
@@ -1643,6 +1691,24 @@ void MainWindow::setA_42()
     calibrationFunctions(maxValue,5);
 }
 
+void MainWindow::getAddress()
+{
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetAddress);
+    unsigned char *data = new unsigned char [2];
+    data[0] = 0x03;
+    data[1] = 0x01;
+    timerCalibration->start(50);
+    calibrationFunctionsGet(data,2);
+}
+void MainWindow::getMode()
+{
+    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMode);
+    unsigned char *data = new unsigned char [2];
+    data[0] = 0x01;
+    data[1] = 0x01;
+    timerCalibration->start(50);
+    calibrationFunctionsGet(data,2);
+}
 void MainWindow::getMaxValue()
 {
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMaxValue);
@@ -1725,6 +1791,42 @@ void MainWindow::getCurrent()
     calibrationFunctionsGet(data,5);
 }
 
+void MainWindow::indicateSetAddress()
+{
+    if(answerIsGet)
+    {
+        ui->comboBoxSetAddress->setStyleSheet(styleSheetCalibrationComboBoxGood);
+        countIndicateCalibration = 0;
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetAddress);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->comboBoxSetAddress->setStyleSheet(styleSheetCalibrationComboBoxDefault);
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetAddress);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
+}
+void MainWindow::indicateSetMode()
+{
+    if(answerIsGet)
+    {
+        ui->comboBoxSetMode->setStyleSheet(styleSheetCalibrationComboBoxGood);
+        countIndicateCalibration = 0;
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMode);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->comboBoxSetMode->setStyleSheet(styleSheetCalibrationComboBoxDefault);
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMode);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
+}
 void MainWindow::indicateSetMaxValue()
 {
     if(answerIsGet)
@@ -1852,6 +1954,62 @@ void MainWindow::indicateSetA_42()
     countIndicateCalibration++;
 }
 
+void MainWindow::indicateGetAddress()
+{
+    if(answerIsGet)
+    {
+        countIndicateCalibration = 0;
+        answer b(inBytesExpected);
+        b.createAnswer(ansGet,inBytesExpected);
+        b.analysis();
+        char *zData = new char [5];
+        zData = b.getData();
+        char f =zData[0];
+        QByteArray outText = QByteArray(1,f).toHex();
+        ui->lineEditGetAddress->setText(outText);
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetAddress);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->lineEditGetAddress->setText(QString("Bad Crc"));
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetAddress);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
+}
+void MainWindow::indicateGetMode()
+{
+    if(answerIsGet)
+    {
+        countIndicateCalibration = 0;
+        answer b(inBytesExpected);
+        b.createAnswer(ansGet,inBytesExpected);
+        b.analysis();
+        char *zData = new char [5];
+        zData = b.getData();
+        char f =zData[0];
+        if(f == 0x02)
+        {
+            ui->lineEditGetMode->setText("HART");
+
+        }else if(f == 0x04)
+        {
+            ui->lineEditGetMode->setText("RS-485");
+        }
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMode);
+        timerCalibration->stop();
+    }
+    if(countIndicateCalibration>40)
+    {
+        countIndicateCalibration = 0;
+        ui->lineEditGetMode->setText(QString("Bad Crc"));
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMode);
+        timerCalibration->stop();
+    }
+    countIndicateCalibration++;
+}
 void MainWindow::indicateGetMaxValue()
 {
     if(answerIsGet)

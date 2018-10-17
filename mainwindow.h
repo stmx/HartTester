@@ -79,8 +79,9 @@ private slots:
     void checkPassword();
     void calibrationFunctions(unsigned char *data,int numberData);
     void calibrationFunctionsGet(unsigned char *data1,int numberData1);
-    void changeAddress();
 
+    void setAddress();
+    void setMode();
     void setMaxValue();
     void setMaxValue_2();
     void setMovingAverage_1();
@@ -89,6 +90,8 @@ private slots:
     void setA_41();
     void setA_42();
 
+    void getAddress();
+    void getMode();
     void getMaxValue();
     void getMaxValue_2();
     void getMovingAverage_1();
@@ -99,6 +102,8 @@ private slots:
     void getCurrent();
     void getPressue();
 
+    void indicateSetAddress();
+    void indicateSetMode();
     void indicateSetMaxValue();
     void indicateSetMaxValue_2();
     void indicateSetMovingAverage_1();    
@@ -107,6 +112,8 @@ private slots:
     void indicateSetA_41();    
     void indicateSetA_42();
 
+    void indicateGetAddress();
+    void indicateGetMode();
     void indicateGetMaxValue();
     void indicateGetMaxValue_2();
     void indicateGetMovingAverage_1();
