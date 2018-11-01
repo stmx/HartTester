@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>HartTester</class>
+ <widget class="QMainWindow" name="HartTester">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>928</width>
-    <height>493</height>
+    <width>1008</width>
+    <height>529</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,8 +25,8 @@
      <rect>
       <x>0</x>
       <y>50</y>
-      <width>921</width>
-      <height>511</height>
+      <width>1381</width>
+      <height>421</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -40,7 +40,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>1</number>
     </property>
     <property name="iconSize">
      <size>
@@ -92,7 +92,7 @@
      <widget class="QLineEdit" name="lineFloat_1">
       <property name="geometry">
        <rect>
-        <x>614</x>
+        <x>720</x>
         <y>140</y>
         <width>113</width>
         <height>20</height>
@@ -105,7 +105,7 @@
      <widget class="QLineEdit" name="lineAddr91">
       <property name="geometry">
        <rect>
-        <x>824</x>
+        <x>930</x>
         <y>100</y>
         <width>21</width>
         <height>20</height>
@@ -131,7 +131,7 @@
      <widget class="QLabel" name="label_12">
       <property name="geometry">
        <rect>
-        <x>614</x>
+        <x>720</x>
         <y>100</y>
         <width>111</width>
         <height>16</height>
@@ -146,7 +146,7 @@
        <rect>
         <x>14</x>
         <y>120</y>
-        <width>401</width>
+        <width>521</width>
         <height>20</height>
        </rect>
       </property>
@@ -157,7 +157,7 @@
      <widget class="QLineEdit" name="lineFloat_6">
       <property name="geometry">
        <rect>
-        <x>614</x>
+        <x>720</x>
         <y>310</y>
         <width>113</width>
         <height>20</height>
@@ -216,29 +216,10 @@
        <property name="verticalSpacing">
         <number>6</number>
        </property>
-       <item row="0" column="0">
-        <widget class="QLineEdit" name="lineEdit">
-         <property name="inputMask">
-          <string>009</string>
-         </property>
-         <property name="text">
-          <string>500</string>
-         </property>
-         <property name="maxLength">
-          <number>3</number>
-         </property>
-         <property name="echoMode">
-          <enum>QLineEdit::Normal</enum>
-         </property>
-         <property name="readOnly">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="1">
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>ms</string>
+          <string>с</string>
          </property>
         </widget>
        </item>
@@ -263,12 +244,34 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="0">
+        <widget class="QDoubleSpinBox" name="doubleSpinBoxTimerSend">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="minimum">
+          <double>0.500000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>10.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.050000000000000</double>
+         </property>
+         <property name="value">
+          <double>1.000000000000000</double>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QLineEdit" name="lineFloat_4">
       <property name="geometry">
        <rect>
-        <x>614</x>
+        <x>720</x>
         <y>240</y>
         <width>113</width>
         <height>20</height>
@@ -309,7 +312,7 @@
        <rect>
         <x>14</x>
         <y>150</y>
-        <width>581</width>
+        <width>701</width>
         <height>181</height>
        </rect>
       </property>
@@ -335,7 +338,7 @@
      <widget class="QLabel" name="label_13">
       <property name="geometry">
        <rect>
-        <x>790</x>
+        <x>896</x>
         <y>100</y>
         <width>31</width>
         <height>20</height>
@@ -348,7 +351,7 @@
      <widget class="QLineEdit" name="lineEdit_2">
       <property name="geometry">
        <rect>
-        <x>424</x>
+        <x>540</x>
         <y>120</y>
         <width>171</width>
         <height>20</height>
@@ -396,7 +399,7 @@
      <widget class="QLabel" name="label_9">
       <property name="geometry">
        <rect>
-        <x>424</x>
+        <x>540</x>
         <y>100</y>
         <width>121</width>
         <height>16</height>
@@ -409,7 +412,7 @@
      <widget class="QSpinBox" name="spinData91">
       <property name="geometry">
        <rect>
-        <x>734</x>
+        <x>840</x>
         <y>100</y>
         <width>42</width>
         <height>20</height>
@@ -428,7 +431,7 @@
      <widget class="QWidget" name="widget" native="true">
       <property name="geometry">
        <rect>
-        <x>730</x>
+        <x>830</x>
         <y>120</y>
         <width>131</width>
         <height>231</height>
@@ -968,7 +971,7 @@
      <widget class="QLineEdit" name="lineFloat_3">
       <property name="geometry">
        <rect>
-        <x>614</x>
+        <x>720</x>
         <y>210</y>
         <width>113</width>
         <height>20</height>
@@ -981,7 +984,7 @@
      <widget class="QLineEdit" name="lineFloat_5">
       <property name="geometry">
        <rect>
-        <x>614</x>
+        <x>720</x>
         <y>280</y>
         <width>113</width>
         <height>20</height>
@@ -994,7 +997,7 @@
      <widget class="QLineEdit" name="lineFloat_2">
       <property name="geometry">
        <rect>
-        <x>614</x>
+        <x>720</x>
         <y>170</y>
         <width>113</width>
         <height>20</height>
@@ -1101,7 +1104,7 @@
      <widget class="QPushButton" name="buttonFunction3Send">
       <property name="geometry">
        <rect>
-        <x>740</x>
+        <x>840</x>
         <y>10</y>
         <width>141</width>
         <height>23</height>
@@ -1114,8 +1117,8 @@
      <widget class="QPushButton" name="buttonFunction3Loop">
       <property name="geometry">
        <rect>
-        <x>740</x>
-        <y>56</y>
+        <x>840</x>
+        <y>36</y>
         <width>141</width>
         <height>23</height>
        </rect>
@@ -1127,8 +1130,8 @@
      <widget class="QPushButton" name="pushButton_10">
       <property name="geometry">
        <rect>
-        <x>740</x>
-        <y>80</y>
+        <x>840</x>
+        <y>60</y>
         <width>141</width>
         <height>23</height>
        </rect>
@@ -1141,7 +1144,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>340</y>
+        <y>370</y>
         <width>75</width>
         <height>23</height>
        </rect>
@@ -1153,8 +1156,8 @@
      <widget class="QCheckBox" name="checkDevice_1">
       <property name="geometry">
        <rect>
-        <x>740</x>
-        <y>160</y>
+        <x>850</x>
+        <y>234</y>
         <width>91</width>
         <height>21</height>
        </rect>
@@ -1169,8 +1172,8 @@
      <widget class="QCheckBox" name="checkDevice_2">
       <property name="geometry">
        <rect>
-        <x>740</x>
-        <y>190</y>
+        <x>850</x>
+        <y>264</y>
         <width>91</width>
         <height>21</height>
        </rect>
@@ -1182,8 +1185,8 @@
      <widget class="QCheckBox" name="checkDevice_3">
       <property name="geometry">
        <rect>
-        <x>740</x>
-        <y>220</y>
+        <x>850</x>
+        <y>294</y>
         <width>91</width>
         <height>21</height>
        </rect>
@@ -1195,8 +1198,8 @@
      <widget class="QCheckBox" name="checkDevice_4">
       <property name="geometry">
        <rect>
-        <x>740</x>
-        <y>250</y>
+        <x>850</x>
+        <y>324</y>
         <width>91</width>
         <height>21</height>
        </rect>
@@ -1208,8 +1211,8 @@
      <widget class="QCheckBox" name="checkDevice_5">
       <property name="geometry">
        <rect>
-        <x>740</x>
-        <y>280</y>
+        <x>850</x>
+        <y>354</y>
         <width>91</width>
         <height>21</height>
        </rect>
@@ -1223,8 +1226,8 @@
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>721</width>
-        <height>321</height>
+        <width>821</width>
+        <height>351</height>
        </rect>
       </property>
       <property name="editTriggers">
@@ -1237,8 +1240,8 @@
      <widget class="QComboBox" name="comboBoxAddressFunc3_1">
       <property name="geometry">
        <rect>
-        <x>830</x>
-        <y>160</y>
+        <x>940</x>
+        <y>234</y>
         <width>51</width>
         <height>22</height>
        </rect>
@@ -1247,8 +1250,8 @@
      <widget class="QComboBox" name="comboBoxAddressFunc3_2">
       <property name="geometry">
        <rect>
-        <x>830</x>
-        <y>190</y>
+        <x>940</x>
+        <y>264</y>
         <width>51</width>
         <height>22</height>
        </rect>
@@ -1257,8 +1260,8 @@
      <widget class="QComboBox" name="comboBoxAddressFunc3_3">
       <property name="geometry">
        <rect>
-        <x>830</x>
-        <y>220</y>
+        <x>940</x>
+        <y>294</y>
         <width>51</width>
         <height>22</height>
        </rect>
@@ -1267,8 +1270,8 @@
      <widget class="QComboBox" name="comboBoxAddressFunc3_4">
       <property name="geometry">
        <rect>
-        <x>830</x>
-        <y>250</y>
+        <x>940</x>
+        <y>324</y>
         <width>51</width>
         <height>22</height>
        </rect>
@@ -1277,8 +1280,8 @@
      <widget class="QComboBox" name="comboBoxAddressFunc3_5">
       <property name="geometry">
        <rect>
-        <x>830</x>
-        <y>280</y>
+        <x>940</x>
+        <y>354</y>
         <width>51</width>
         <height>22</height>
        </rect>
@@ -1287,14 +1290,98 @@
      <widget class="QLabel" name="label_8">
       <property name="geometry">
        <rect>
-        <x>840</x>
-        <y>130</y>
-        <width>31</width>
+        <x>940</x>
+        <y>210</y>
+        <width>41</width>
         <height>20</height>
        </rect>
       </property>
       <property name="text">
        <string>Адрес</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBoxCakibrationMiddle">
+      <property name="geometry">
+       <rect>
+        <x>850</x>
+        <y>120</y>
+        <width>141</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Калибровка НУ (23 °C)</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBoxCakibrationLow">
+      <property name="geometry">
+       <rect>
+        <x>850</x>
+        <y>140</y>
+        <width>141</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Калибровка (-40 °C)</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBoxCakibrationHigh">
+      <property name="geometry">
+       <rect>
+        <x>850</x>
+        <y>160</y>
+        <width>131</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Калибровка (+70 °C)</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="buttonClearCalibration">
+      <property name="geometry">
+       <rect>
+        <x>836</x>
+        <y>182</y>
+        <width>162</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Очистить данные калибровки</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spinBox_2">
+      <property name="geometry">
+       <rect>
+        <x>930</x>
+        <y>90</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>10</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>150</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_16">
+      <property name="geometry">
+       <rect>
+        <x>840</x>
+        <y>90</y>
+        <width>91</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Частота опроса</string>
       </property>
      </widget>
     </widget>
@@ -1380,26 +1467,10 @@
        <string/>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_2">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="geometry">
-       <rect>
-        <x>800</x>
-        <y>350</y>
-        <width>91</width>
-        <height>23</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Delete(Not Used)</string>
-      </property>
-     </widget>
      <widget class="QCheckBox" name="checkBoxFixedCurrent">
       <property name="geometry">
        <rect>
-        <x>700</x>
+        <x>810</x>
         <y>99</y>
         <width>201</width>
         <height>23</height>
@@ -1415,7 +1486,7 @@
      <widget class="QPushButton" name="buttonSetFixedCurrent">
       <property name="geometry">
        <rect>
-        <x>700</x>
+        <x>810</x>
         <y>119</y>
         <width>81</width>
         <height>23</height>
@@ -1428,7 +1499,7 @@
      <widget class="QLineEdit" name="lineEditSetFixedCurrent">
       <property name="geometry">
        <rect>
-        <x>780</x>
+        <x>890</x>
         <y>120</y>
         <width>113</width>
         <height>21</height>
@@ -1438,733 +1509,7 @@
      <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>100</y>
-        <width>680</width>
-        <height>268</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <property name="spacing">
-        <number>8</number>
-       </property>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout">
-         <item>
-          <widget class="QLabel" name="label_36">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Максимальное значение статического давления, Па</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_37">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Значение верхнего диапазона измерения перепада давления, Па</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_31">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Количество точек скользящего среднего U1, U2</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_32">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Количество точек скользящего среднего U3, U4</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_33">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Коэффициент a40</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_34">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Коэффициент a41</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_35">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Коэффициент a42</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_40">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Адрес устройства</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_41">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>23</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Режим работы</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QGridLayout" name="gridLayout_4">
-         <item row="7" column="0">
-          <widget class="QPushButton" name="buttonSetAddress">
-           <property name="text">
-            <string>Установить</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="default">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="lineEditSetMaxValue">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="inputMask">
-            <string/>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QPushButton" name="buttonMovingAverage_1">
-           <property name="text">
-            <string>Установить</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="default">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QPushButton" name="buttonSetMaxValue">
-           <property name="minimumSize">
-            <size>
-             <width>85</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Установить</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="default">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QPushButton" name="buttonMovingAverage_2">
-           <property name="text">
-            <string>Установить</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="default">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QSpinBox" name="spinBoxMovingAverage_1">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="minimum">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <number>100</number>
-           </property>
-           <property name="value">
-            <number>100</number>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QLineEdit" name="lineEditSetA_40">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-           <property name="inputMask">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="0">
-          <widget class="QPushButton" name="buttonSetA_42">
-           <property name="text">
-            <string>Установить</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QSpinBox" name="spinBoxMovingAverage_2">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="maximum">
-            <number>100</number>
-           </property>
-           <property name="value">
-            <number>100</number>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QPushButton" name="buttonSetA_40">
-           <property name="text">
-            <string>Установить</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
-          <widget class="QLineEdit" name="lineEditSetA_41">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0">
-          <widget class="QPushButton" name="buttonSetA_41">
-           <property name="text">
-            <string>Установить</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QPushButton" name="buttonSetMaxValue_2">
-           <property name="minimumSize">
-            <size>
-             <width>85</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Установить</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="default">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="1">
-          <widget class="QLineEdit" name="lineEditSetA_42">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="lineEditSetMaxValue_2">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="inputMask">
-            <string/>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="8" column="0">
-          <widget class="QPushButton" name="buttonSetMode">
-           <property name="text">
-            <string>Установить</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="default">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="1">
-          <widget class="QComboBox" name="comboBoxSetAddress">
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-          </widget>
-         </item>
-         <item row="8" column="1">
-          <widget class="QComboBox" name="comboBoxSetMode">
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="7" column="0">
-          <widget class="QPushButton" name="buttonGetAddress">
-           <property name="text">
-            <string>Получить</string>
-           </property>
-          </widget>
-         </item>
-         <item row="8" column="1">
-          <widget class="QLineEdit" name="lineEditGetMode">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-           <property name="inputMask">
-            <string/>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="cursorMoveStyle">
-            <enum>Qt::VisualMoveStyle</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="1">
-          <widget class="QLineEdit" name="lineEditGetAddress">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-           <property name="inputMask">
-            <string/>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="cursorMoveStyle">
-            <enum>Qt::VisualMoveStyle</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QPushButton" name="buttonGetA_40">
-           <property name="text">
-            <string>Получить</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="1">
-          <widget class="QLineEdit" name="lineEditGetA_42">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-           <property name="inputMask">
-            <string/>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="cursorMoveStyle">
-            <enum>Qt::VisualMoveStyle</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
-          <widget class="QLineEdit" name="lineEditGetA_41">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-           <property name="inputMask">
-            <string/>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="cursorMoveStyle">
-            <enum>Qt::VisualMoveStyle</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0">
-          <widget class="QPushButton" name="buttonGetA_41">
-           <property name="text">
-            <string>Получить</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QPushButton" name="buttonGetMaxValue_2">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string>Получить</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="default">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="0">
-          <widget class="QPushButton" name="buttonGetA_42">
-           <property name="text">
-            <string>Получить</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="lineEditMaxValueGet_2">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="inputMask">
-            <string/>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="frame">
-            <bool>true</bool>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="cursorMoveStyle">
-            <enum>Qt::VisualMoveStyle</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="lineEditMaxValueGet">
-           <property name="minimumSize">
-            <size>
-             <width>80</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="inputMask">
-            <string/>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="frame">
-            <bool>true</bool>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="cursorMoveStyle">
-            <enum>Qt::VisualMoveStyle</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QPushButton" name="buttonGetMaxValue">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string>Получить</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="default">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QPushButton" name="buttonGetMovingAverage_1">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string>Получить</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="default">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLineEdit" name="lineEditGetMovingAverage_1">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="inputMask">
-            <string/>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="frame">
-            <bool>true</bool>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="cursorMoveStyle">
-            <enum>Qt::VisualMoveStyle</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLineEdit" name="lineEditGetMovingAverage_2">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="inputMask">
-            <string/>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="frame">
-            <bool>true</bool>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="cursorMoveStyle">
-            <enum>Qt::VisualMoveStyle</enum>
-           </property>
-           <property name="clearButtonEnabled">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QLineEdit" name="lineEditGetA_40">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>21</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-           <property name="inputMask">
-            <string/>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="cursorMoveStyle">
-            <enum>Qt::VisualMoveStyle</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QPushButton" name="buttonGetMovingAverage_2">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string>Получить</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-           <property name="default">
-            <bool>false</bool>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="8" column="0">
-          <widget class="QPushButton" name="buttonGetMode">
-           <property name="text">
-            <string>Получить</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="layoutWidget">
-      <property name="geometry">
-       <rect>
-        <x>270</x>
+        <x>320</x>
         <y>10</y>
         <width>421</width>
         <height>58</height>
@@ -2319,6 +1664,934 @@
        </item>
       </layout>
      </widget>
+     <widget class="QPushButton" name="buttonFindCoef">
+      <property name="geometry">
+       <rect>
+        <x>810</x>
+        <y>322</y>
+        <width>151</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Рассчитать коэфиициенты</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>12</x>
+        <y>102</y>
+        <width>791</width>
+        <height>275</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_13">
+         <item>
+          <widget class="QLabel" name="label_41">
+           <property name="minimumSize">
+            <size>
+             <width>411</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Режим работы</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonSetMode">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Установить</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="default">
+            <bool>false</bool>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBoxSetMode">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonGetMode">
+           <property name="text">
+            <string>Получить</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditGetMode">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="cursorMoveStyle">
+            <enum>Qt::VisualMoveStyle</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_12">
+         <item>
+          <widget class="QLabel" name="label_31">
+           <property name="minimumSize">
+            <size>
+             <width>411</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Количество точек скользящего среднего U1, U2</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonMovingAverage_1">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Установить</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="default">
+            <bool>false</bool>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="spinBoxMovingAverage_1">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>100</number>
+           </property>
+           <property name="value">
+            <number>100</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonGetMovingAverage_1">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Получить</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="default">
+            <bool>false</bool>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditGetMovingAverage_1">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="cursorMoveStyle">
+            <enum>Qt::VisualMoveStyle</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_11">
+         <item>
+          <widget class="QLabel" name="label_32">
+           <property name="minimumSize">
+            <size>
+             <width>411</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Количество точек скользящего среднего U3, U4</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonMovingAverage_2">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Установить</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="default">
+            <bool>false</bool>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="spinBoxMovingAverage_2">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="maximum">
+            <number>100</number>
+           </property>
+           <property name="value">
+            <number>100</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonGetMovingAverage_2">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Получить</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="default">
+            <bool>false</bool>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditGetMovingAverage_2">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="cursorMoveStyle">
+            <enum>Qt::VisualMoveStyle</enum>
+           </property>
+           <property name="clearButtonEnabled">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <item>
+          <widget class="QLabel" name="label_40">
+           <property name="minimumSize">
+            <size>
+             <width>411</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Адрес устройства</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonSetAddress">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Установить</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="default">
+            <bool>false</bool>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBoxSetAddress">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonGetAddress">
+           <property name="text">
+            <string>Получить</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditGetAddress">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="cursorMoveStyle">
+            <enum>Qt::VisualMoveStyle</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <item>
+          <widget class="QLabel" name="label_36">
+           <property name="minimumSize">
+            <size>
+             <width>411</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Максимальное значение статического давления, Па</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonSetMaxValue">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Установить</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="default">
+            <bool>false</bool>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditSetMaxValue">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonGetMaxValue">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Получить</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="default">
+            <bool>false</bool>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditMaxValueGet">
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="cursorMoveStyle">
+            <enum>Qt::VisualMoveStyle</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <item>
+          <widget class="QLabel" name="label_37">
+           <property name="minimumSize">
+            <size>
+             <width>411</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Максимальное значение верхнего диапазона измерения перепада давления, Па</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonSetMaxValue_2">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Установить</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="default">
+            <bool>false</bool>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditSetMaxValue_2">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonGetMaxValue_2">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Получить</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="default">
+            <bool>false</bool>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditMaxValueGet_2">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="cursorMoveStyle">
+            <enum>Qt::VisualMoveStyle</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <item>
+          <widget class="QLabel" name="label_33">
+           <property name="minimumSize">
+            <size>
+             <width>411</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Коэффициент a40</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonSetA_40">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Установить</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditSetA_40">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonGetA_40">
+           <property name="text">
+            <string>Получить</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditGetA_40">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="cursorMoveStyle">
+            <enum>Qt::VisualMoveStyle</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <widget class="QLabel" name="label_34">
+           <property name="minimumSize">
+            <size>
+             <width>411</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Коэффициент a41</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonSetA_41">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Установить</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditSetA_41">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonGetA_41">
+           <property name="text">
+            <string>Получить</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditGetA_41">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="cursorMoveStyle">
+            <enum>Qt::VisualMoveStyle</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="label_35">
+           <property name="minimumSize">
+            <size>
+             <width>411</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Коэффициент a42</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonSetA_42">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Установить</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditSetA_42">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonGetA_42">
+           <property name="text">
+            <string>Получить</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEditGetA_42">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>21</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="inputMask">
+            <string/>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="cursorMoveStyle">
+            <enum>Qt::VisualMoveStyle</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </widget>
    <widget class="QComboBox" name="comboBoxAddress">
@@ -2363,7 +2636,7 @@
    <widget class="QComboBox" name="comboBox">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>40</x>
       <y>11</y>
       <width>60</width>
       <height>21</height>
@@ -2373,7 +2646,7 @@
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>80</x>
+      <x>100</x>
       <y>10</y>
       <width>61</width>
       <height>23</height>
@@ -2386,7 +2659,7 @@
    <widget class="QPushButton" name="buttonClose">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>160</x>
       <y>10</y>
       <width>81</width>
       <height>23</height>
@@ -2399,7 +2672,7 @@
    <widget class="QLineEdit" name="linePassword">
     <property name="geometry">
      <rect>
-      <x>330</x>
+      <x>370</x>
       <y>10</y>
       <width>113</width>
       <height>20</height>
@@ -2412,7 +2685,7 @@
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>250</x>
+      <x>290</x>
       <y>10</y>
       <width>81</width>
       <height>20</height>
@@ -2435,16 +2708,59 @@
      <string>Адрес устройства</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="buttonUpdateCom">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>21</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>O</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEditStatus">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>470</y>
+      <width>1011</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>928</width>
+     <width>1008</width>
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string/>
+    </property>
+    <addaction name="separator"/>
+   </widget>
+   <widget class="QMenu" name="menutest">
+    <property name="title">
+     <string>Меню</string>
+    </property>
+    <addaction name="actionDialog"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menutest"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -2454,9 +2770,137 @@
     <bool>false</bool>
    </attribute>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionDialog">
+   <property name="text">
+    <string>Диалог</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>comboBoxSetMode</tabstop>
+  <tabstop>buttonSetMode</tabstop>
+  <tabstop>spinBoxMovingAverage_1</tabstop>
+  <tabstop>buttonMovingAverage_1</tabstop>
+  <tabstop>spinBoxMovingAverage_2</tabstop>
+  <tabstop>buttonMovingAverage_2</tabstop>
+  <tabstop>comboBoxSetAddress</tabstop>
+  <tabstop>buttonSetAddress</tabstop>
+  <tabstop>lineEditSetMaxValue</tabstop>
+  <tabstop>buttonSetMaxValue</tabstop>
+  <tabstop>lineEditSetMaxValue_2</tabstop>
+  <tabstop>buttonSetMaxValue_2</tabstop>
+  <tabstop>lineEditSetA_40</tabstop>
+  <tabstop>buttonSetA_40</tabstop>
+  <tabstop>lineEditSetA_41</tabstop>
+  <tabstop>buttonSetA_41</tabstop>
+  <tabstop>lineEditSetA_42</tabstop>
+  <tabstop>buttonSetA_42</tabstop>
+  <tabstop>lineEditGetMode</tabstop>
+  <tabstop>buttonGetMode</tabstop>
+  <tabstop>lineEditGetMovingAverage_1</tabstop>
+  <tabstop>buttonGetMovingAverage_1</tabstop>
+  <tabstop>lineEditGetMovingAverage_2</tabstop>
+  <tabstop>buttonGetMovingAverage_2</tabstop>
+  <tabstop>lineEditGetAddress</tabstop>
+  <tabstop>buttonGetAddress</tabstop>
+  <tabstop>lineEditMaxValueGet</tabstop>
+  <tabstop>buttonGetMaxValue</tabstop>
+  <tabstop>lineEditMaxValueGet_2</tabstop>
+  <tabstop>buttonGetMaxValue_2</tabstop>
+  <tabstop>lineEditGetA_40</tabstop>
+  <tabstop>buttonGetA_40</tabstop>
+  <tabstop>lineEditGetA_41</tabstop>
+  <tabstop>buttonGetA_41</tabstop>
+  <tabstop>lineEditGetA_42</tabstop>
+  <tabstop>buttonGetA_42</tabstop>
+  <tabstop>buttonFindCoef</tabstop>
+  <tabstop>checkBoxFixedCurrent</tabstop>
+  <tabstop>lineEditSetFixedCurrent</tabstop>
+  <tabstop>buttonSetFixedCurrent</tabstop>
+  <tabstop>buttonGetPressue</tabstop>
+  <tabstop>lineEditGetPressue</tabstop>
+  <tabstop>buttonGetCurrent</tabstop>
+  <tabstop>lineEditGetCurrent</tabstop>
+  <tabstop>buttonSpan</tabstop>
+  <tabstop>buttonZero</tabstop>
+  <tabstop>buttonZeroFirstVar</tabstop>
+  <tabstop>lineAddrShort</tabstop>
+  <tabstop>lineAddrLong</tabstop>
+  <tabstop>buttonFunction3Send</tabstop>
+  <tabstop>buttonFunction3Loop</tabstop>
+  <tabstop>pushButton_10</tabstop>
+  <tabstop>pushButton_11</tabstop>
+  <tabstop>checkDevice_1</tabstop>
+  <tabstop>checkDevice_2</tabstop>
+  <tabstop>checkDevice_3</tabstop>
+  <tabstop>checkDevice_4</tabstop>
+  <tabstop>checkDevice_5</tabstop>
+  <tabstop>tableView</tabstop>
+  <tabstop>comboBoxAddressFunc3_1</tabstop>
+  <tabstop>comboBoxAddressFunc3_2</tabstop>
+  <tabstop>comboBoxAddressFunc3_3</tabstop>
+  <tabstop>comboBoxAddressFunc3_4</tabstop>
+  <tabstop>comboBoxAddressFunc3_5</tabstop>
+  <tabstop>checkBoxCakibrationMiddle</tabstop>
+  <tabstop>checkBoxCakibrationLow</tabstop>
+  <tabstop>checkBoxCakibrationHigh</tabstop>
+  <tabstop>lineFloat_5</tabstop>
+  <tabstop>lineFloat_2</tabstop>
+  <tabstop>buttonClear</tabstop>
+  <tabstop>lineFloat_4_Byte_3</tabstop>
+  <tabstop>lineFloat_6_Byte_3</tabstop>
+  <tabstop>lineFloat_5_Byte_2</tabstop>
+  <tabstop>buttonTimerStart</tabstop>
+  <tabstop>checkEnTextBrows</tabstop>
+  <tabstop>lineRequest</tabstop>
+  <tabstop>lineEdit_2</tabstop>
+  <tabstop>comboBoxFunc</tabstop>
+  <tabstop>lineFloat_6</tabstop>
+  <tabstop>lineFloat_1_Byte_3</tabstop>
+  <tabstop>lineFloat_1_Byte_1</tabstop>
+  <tabstop>lineFloat_1_Byte_2</tabstop>
+  <tabstop>lineFloat_2_Byte_4</tabstop>
+  <tabstop>lineFloat_6_Byte_4</tabstop>
+  <tabstop>lineFloat_1_Byte_4</tabstop>
+  <tabstop>lineFloat_3_Byte_2</tabstop>
+  <tabstop>lineFloat_2_Byte_1</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>lineFloat_4</tabstop>
+  <tabstop>lineAddr91</tabstop>
+  <tabstop>pushButton_7</tabstop>
+  <tabstop>lineFloat_1</tabstop>
+  <tabstop>textEdit</tabstop>
+  <tabstop>lineFloat_3_Byte_1</tabstop>
+  <tabstop>lineFloat_5_Byte_3</tabstop>
+  <tabstop>lineFloat_6_Byte_2</tabstop>
+  <tabstop>lineFloat_4_Byte_1</tabstop>
+  <tabstop>lineFloat_2_Byte_2</tabstop>
+  <tabstop>lineFloat_4_Byte_4</tabstop>
+  <tabstop>lineFloat_2_Byte_3</tabstop>
+  <tabstop>lineFloat_3_Byte_3</tabstop>
+  <tabstop>spinData91</tabstop>
+  <tabstop>checkAltView</tabstop>
+  <tabstop>checkLongFrame</tabstop>
+  <tabstop>buttonTimerStop</tabstop>
+  <tabstop>lineFloat_3_Byte_4</tabstop>
+  <tabstop>buttonSend</tabstop>
+  <tabstop>lineFloat_5_Byte_1</tabstop>
+  <tabstop>lineFloat_4_Byte_2</tabstop>
+  <tabstop>lineFloat_5_Byte_4</tabstop>
+  <tabstop>lineFloat_6_Byte_1</tabstop>
+  <tabstop>lineFloat_3</tabstop>
+  <tabstop>spinBox</tabstop>
+  <tabstop>comboBoxAddress</tabstop>
+  <tabstop>buttonResetAddr</tabstop>
+  <tabstop>buttonFindDevice</tabstop>
+  <tabstop>comboBox</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>buttonClose</tabstop>
+  <tabstop>linePassword</tabstop>
+  <tabstop>lineEditStatus</tabstop>
+  <tabstop>buttonUpdateCom</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

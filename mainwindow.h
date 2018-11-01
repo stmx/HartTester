@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "dialog.h"
 #include <QSerialPort>
 #include <QLineEdit>
 #include <QComboBox>
@@ -33,8 +34,8 @@ private slots:
     void startLoop();
     void stopLoop();
     void on_comboBoxFunc_currentIndexChanged();
-    void on_spinBox_valueChanged(int arg1);
-    void on_checkLongFrame_stateChanged(int arg1);
+    void on_spinBox_valueChanged();
+    void on_checkLongFrame_stateChanged();
     void on_checkEnTextBrows_stateChanged(int arg1);
     void on_lineEdit_2_textChanged(const QString &arg1);
     void on_spinData91_valueChanged(int arg1);
@@ -69,9 +70,9 @@ private slots:
 
     void findDevice();
 
-    void on_comboBoxAddress_highlighted(const QString &arg1);
+    void on_comboBoxAddress_highlighted();
 
-    void on_comboBoxAddress_currentIndexChanged(int index);
+    void on_comboBoxAddress_currentIndexChanged();
 
     void indicateCalibrationSpan();
     void indicateCalibrationZero();
@@ -131,7 +132,22 @@ private slots:
     void setValueFixedCurrent();
     void indicateSetValueFixedCurrent();
 
+    void on_checkBoxCakibrationMiddle_stateChanged();
+    void on_checkBoxCakibrationLow_stateChanged();
+    void on_checkBoxCakibrationHigh_stateChanged();
+
+    void updateCom();
+    void findCoef();
+    void clearCalibrationData();
+    void on_spinBox_2_valueChanged(int arg1);
+    void requestFunction3(QComboBox *f);
+    void saveSettings();
+    void downloadSettings();
+    void connections();
+    void aboutHartTester();
+    void aboutQt();
 private:
+    Dialog setDialog;
     Ui::MainWindow *ui;
     QSerialPort *serial = nullptr;
     QTimer *timer = nullptr;

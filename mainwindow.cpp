@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "request.h"
 #include "answer.h"
+#include "dialog.h"
 #include <QtSerialPort>
 #include <QSerialPortInfo>
 #include <QStandardItemModel>
@@ -13,6 +14,10 @@
 #include <QTimer>
 #include <QDateTime>
 #include <QFile>
+#include <QDir>
+#include <QSettings>
+#include <QMessageBox>
+#include <QMenu>
 #define private public
 
 static QString styleSheetCalibrationDefault =           "QLabel{background-color :rgba(255,0,0,100);border-radius:7px;}";
@@ -35,7 +40,6 @@ static bool answerStart = false;
 static bool answerIsGet = false;
 static int inBytesExpected;
 static int NumFunc;
-static int Form = 0;
 static unsigned char ReqData[2] = {0x04,0x02};
 static unsigned char ReqAddr[5] = {0x0f,0x02,0x06,0x01,0xfd};
 static int nSymAnsGet = 0;
@@ -50,13 +54,16 @@ static bool requset2IsSend = 0;
 static bool requset3IsSend = 0;
 static bool requset4IsSend = 0;
 static bool requset5IsSend = 0;
-static int timerSendRequest = 400;
+static int timerSendRequest = 150;
 static int numberRow = 0;
 static QStandardItemModel *model = new QStandardItemModel;
 static QComboBox *comboBoxAddress;
 static int countIndicateCalibration = 0;
 static int lastFunc;
 static bool lastFrame;
+static int pLo = 0;
+static int countTimerFinc3 = 0;
+static bool allRequestIsSend = false;
 
 void ResetAddress()
 {
@@ -79,10 +86,78 @@ void ResetAddress()
     comboBoxAddress->addItem("0f",15);
     comboBoxAddress->setCurrentIndex(14);
 }
+float* findMx(QString hMidle)
+{
+    float* Umx = new float [3];
+    QStringRef subString;
+    int k = 0;
+    int len = 0;
+    int countVar = 0;
+    int pos = 0;
+    float f;
+    float mxU1 = 0, mxU2 = 0, mxU4 = 0;
+    for(k=0;k<hMidle.length();k++)
+    {
+        if(hMidle[k] == 0x0009)
+        {
+            subString = QStringRef(&hMidle, pos, len);
+            if (countVar%3==0) {
+                f = subString.toFloat();
+                mxU1 = mxU1*((int)countVar/3)+f;
+                mxU1 = mxU1/(int)(countVar/3+1);
+            }
+            if (countVar%3==1) {
+                f = subString.toFloat();
+                mxU2 = mxU2*((int)countVar/3)+f;
+                mxU2 = mxU2/(int)(countVar/3+1);
+            }
+            if (countVar%3==2) {
+                f = subString.toFloat();
+                mxU4 = mxU4*((int)countVar/3)+f;
+                mxU4 = mxU4/(int)(countVar/3+1);
+            }
+            pos =k+1;
+            len =0;
+            countVar++;
+            continue;
+        }
+        len++;
+    }
+
+    Umx[0] = mxU1;
+    Umx[1] = mxU2;
+    Umx[2] = mxU4;
+    return Umx;
+
+}
+void removeFile(QString address)
+{
+    QString fileDir;
+    fileDir= QString("data/dataCalibrationHigh_")+address+QString(".txt");
+    QFile(fileDir).remove();
+    fileDir= QString("data/dataCalibrationLow_")+address+QString(".txt");
+    QFile(fileDir).remove();
+    fileDir= QString("data/dataCalibrationMiddle_")+address+QString(".txt");
+    QFile(fileDir).remove();
+}
+void addFunctions(QComboBox *func)
+{
+    func->addItem("0.Считать уникальный идентификатор",0);
+    func->addItem("3.Считать ток и значение четырех динамических переменных",3);
+    //func->addItem("Function 13",13);
+    //func->addItem("Function 35",35);
+    func->addItem("36.Установить верхнее значение диапазона",36);
+    func->addItem("37.Установить нижнее значение диапазона ",37);
+    func->addItem("43.Установить нуль первичной переменной",43);
+    //func->addItem("Function 45",45);
+    func->addItem("51.Чтение нескольких регистров",51);
+    func->addItem("91.Записть нескольких регистров",91);
+}
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
+    setDialog(new Dialog),
     ui(new Ui::MainWindow),
-    serial(new QSerialPort(this)),
+    serial(new QSerialPort(this)),    
     timer(new QTimer(this)),
     timerFunction3(new QTimer(this)),
     timerFunction3Loop(new QTimer(this)),
@@ -101,9 +176,7 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->label_3->setStyleSheet(styleSheetCalibrationDefault);
         ui->label_4->setStyleSheet(styleSheetCalibrationDefault);
         ui->label_5->setStyleSheet(styleSheetCalibrationDefault);
-
-        foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
-                    ui->comboBox->addItem(info.portName());
+        updateCom();
 
         QString arg1 = ui->lineEdit_2->text();
         QByteArray text =QByteArray(arg1.toLocal8Bit());
@@ -113,23 +186,8 @@ MainWindow::MainWindow(QWidget *parent) :
         ReqData[1] = char(hex[1]);
         ui->spinData91->setValue(1);
         ui->checkDevice_1->setCheckState(Qt::Checked);
-        /*////////////////////////////////////////
-        //////////////////////////////////////////
-        //////////Add your function here//////////
-        //////then ctreate handler function///////
-        ////on_comboBoxFunc_currentIndexChanged///
-        //////////////////////////////////////////
-        ////////////////////////////////////////// */
-        ui->comboBoxFunc->addItem("0.Считать уникальный идентификатор",0);
-        ui->comboBoxFunc->addItem("3.Считать ток и значение четырех динамических переменных",3);
-        //ui->comboBoxFunc->addItem("Function 13",13);
-        //ui->comboBoxFunc->addItem("Function 35",35);
-        ui->comboBoxFunc->addItem("36.Установить верхнее значение диапазона",36);
-        ui->comboBoxFunc->addItem("37.Установить нижнее значение диапазона ",37);
-        ui->comboBoxFunc->addItem("43.Установить нуль первичной переменной",43);
-        //ui->comboBoxFunc->addItem("Function 45",45);
-        ui->comboBoxFunc->addItem("51.Чтение нескольких регистров",51);
-        ui->comboBoxFunc->addItem("91.Записть нескольких регистров",91);
+        addFunctions(ui->comboBoxFunc);
+
 
         ui->comboBoxSetAddress->clear();
         ui->comboBoxSetAddress->addItem("00",0);
@@ -153,160 +211,116 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->comboBoxSetMode->addItem("RS-485",4);
 
         comboBoxAddress = ui->comboBoxAddress;
-
-        connect(serial,                     &QSerialPort::readyRead,this,   &MainWindow::readData);             //slot recieve data from COM port
-        connect(timer,                      &QTimer::timeout,       this,   &MainWindow::showTime);             //slot timer for sending loop request
-        connect(timerFunction3,             &QTimer::timeout,       this,   &MainWindow::sendTimerRequest);     //slot timer for sending request for tab Function3
-        connect(timerFunction3Loop,         &QTimer::timeout,       this,   &MainWindow::sendTimerRequestLoop); //slot timer for sending loop request for tab Function3
-        connect(timerFindDevice,            &QTimer::timeout,       this,   &MainWindow::sendFindRequest);      //slot timer for sending find request
-        connect(ui->buttonResetAddr,        &QPushButton::clicked,  this,   &MainWindow::ResetAddressInit);     //slot button for reset combobox address
-        connect(ui->pushButton,             &QPushButton::clicked,  this,   &MainWindow::connectCOM);           //slot button for connection COM port
-        connect(ui->buttonClose,            &QPushButton::clicked,  this,   &MainWindow::closeCOM);             //slot button for closing COM port
-        connect(ui->buttonSend,             &QPushButton::clicked,  this,   &MainWindow::sendRequest);          //slot button for closing COM port
-        connect(ui->buttonClear,            &QPushButton::clicked,  this,   &MainWindow::clearText);            //slot button for clear developer TextEEdit
-        connect(ui->buttonTimerStart,       &QPushButton::clicked,  this,   &MainWindow::startLoop);            //slot button start timer sending loop request
-        connect(ui->buttonTimerStop,        &QPushButton::clicked,  this,   &MainWindow::stopLoop);             //slot button stop timer sending loop request
-        connect(ui->pushButton_7,           &QPushButton::clicked,  this,   &MainWindow::create91Request);      //slot button create request drom data for request91
-        connect(ui->pushButton_10,          &QPushButton::clicked,  this,   &MainWindow::stopLoopFunction3);    //slot button start timer for sending loop request for tab Function3
-        connect(ui->pushButton_11,          &QPushButton::clicked,  this,   &MainWindow::clearTable);           //slot button clear table for tab Function 3
-        connect(ui->buttonFindDevice,       &QPushButton::clicked,  this,   &MainWindow::findDevice);           //slot button start timer for sending find request
-        connect(ui->buttonFunction3Send,    &QPushButton::clicked,  this,   &MainWindow::Function3Send);        //slot button for sending request for tab Function3
-        connect(ui->buttonFunction3Loop,    &QPushButton::clicked,  this,   &MainWindow::startLoopFunction3);   //slot button start timer for sending loop request for tab Function3
-        connect(ui->buttonSpan,             &QPushButton::clicked,  this,   &MainWindow::spanRequest);          //slot button for sending Span request for tab Calibration
-        connect(ui->buttonZero,             &QPushButton::clicked,  this,   &MainWindow::zeroRequest);          //slot button for sending Zero request for tab Calibration
-        connect(ui->buttonZeroFirstVar,     &QPushButton::clicked,  this,   &MainWindow::zeroFirstVarRequest);  //slot button for sending request zero first variable for tab Calibration
-        connect(ui->linePassword,           &QLineEdit::textEdited, this,   &MainWindow::checkPassword);
-        connect(ui->buttonSetAddress,       &QPushButton::clicked,  this,   &MainWindow::setAddress);
-        connect(ui->buttonSetMode,          &QPushButton::clicked,  this,   &MainWindow::setMode);
-        connect(ui->buttonSetMaxValue,      &QPushButton::clicked,  this,   &MainWindow::setMaxValue);
-        connect(ui->buttonSetMaxValue_2,    &QPushButton::clicked,  this,   &MainWindow::setMaxValue_2);
-        connect(ui->buttonMovingAverage_1,  &QPushButton::clicked,  this,   &MainWindow::setMovingAverage_1);
-        connect(ui->buttonMovingAverage_2,  &QPushButton::clicked,  this,   &MainWindow::setMovingAverage_2);
-        connect(ui->buttonSetA_40,          &QPushButton::clicked,  this,   &MainWindow::setA_40);
-        connect(ui->buttonSetA_41,          &QPushButton::clicked,  this,   &MainWindow::setA_41);
-        connect(ui->buttonSetA_42,          &QPushButton::clicked,  this,   &MainWindow::setA_42);
-        connect(ui->buttonGetAddress,       &QPushButton::clicked,  this,   &MainWindow::getAddress);
-        connect(ui->buttonGetMode,          &QPushButton::clicked,  this,   &MainWindow::getMode);
-        connect(ui->buttonGetMaxValue,      &QPushButton::clicked,  this,   &MainWindow::getMaxValue);
-        connect(ui->buttonGetMaxValue_2,    &QPushButton::clicked,  this,   &MainWindow::getMaxValue_2);
-        connect(ui->buttonGetMovingAverage_1,&QPushButton::clicked, this,   &MainWindow::getMovingAverage_1);
-        connect(ui->buttonGetMovingAverage_2,&QPushButton::clicked, this,   &MainWindow::getMovingAverage_2);
-        connect(ui->buttonGetA_40,          &QPushButton::clicked,  this,   &MainWindow::getA_40);
-        connect(ui->buttonGetA_41,          &QPushButton::clicked,  this,   &MainWindow::getA_41);
-        connect(ui->buttonGetA_42,          &QPushButton::clicked,  this,   &MainWindow::getA_42);
-        connect(ui->buttonSetFixedCurrent,  &QPushButton::clicked,  this,   &MainWindow::setValueFixedCurrent);
-        connect(ui->buttonGetCurrent,       &QPushButton::clicked,  this,   &MainWindow::getCurrent);
-        connect(ui->buttonGetPressue,       &QPushButton::clicked,  this,   &MainWindow::getPressue);
+        connections();
         ResetAddressInit();
         timer->stop();
         timerFunction3->stop();
         timerFunction3Loop->stop();
         timerFindDevice->stop();
-
-
-
-
-        QString fileDir = QString("GhStatus.txt");
-        QFile file1(fileDir);
-        if(!file1.open(QIODevice::ReadOnly | QIODevice::Text))
-        {
-
-        }
-        char *h =new char[2];
-        QByteArray ffff = file1.readAll();
-
-        QString hhhh(ffff);
-        file1.close();
-        int k = 0;
-        int countVar = 0;
-        int pos =0;
-        int len =0;
-        QStringRef subString;
-        QString req51;
-        for(k=0;k<hhhh.length();k++)
-        {
-            if(hhhh[k] == 0x0020)
-            {
-                subString=QStringRef(&hhhh, pos, len);
-
-                switch (countVar) {
-                    case 0:
-                        ui->comboBoxAddress->setCurrentText(subString.toString());
-                    break;
-                    case 1:
-                        lastFunc = subString.toString().toInt();
-                        ui->comboBoxFunc->setCurrentIndex(subString.toString().toInt());
-                    break;
-                    case 2:
-                        ui->spinBox->setValue(subString.toString().toInt());
-                    break;
-                    case 3:
-                        if(subString.toString().toInt() == 1)
-                        {
-                            ui->checkLongFrame->setCheckState(Qt::Checked);
-                        }
-                        else
-                        {
-                            ui->checkLongFrame->setCheckState(Qt::Unchecked);
-                        }
-                    break;
-                    case 4:
-                        ui->tabWidget->setCurrentIndex(subString.toString().toInt());
-                    break;
-                    case 5:
-                        ui->spinData91->setValue(subString.toString().toInt());
-                    break;
-                    case 6:
-                        ui->lineAddr91->setText(subString.toString());
-                    break;
-                    case 7:
-                        req51 = subString.toString()+" ";
-                    break;
-                    case 8:
-                        ui->lineEdit_2->setText(req51+subString.toString());
-                    break;
-                }
-                pos =k+1;
-                len =0;
-                countVar++;
-                continue;
-            }
-            len++;
-        }
-
-        //ui->comboBoxAddress->setCurrentText(subString.toString());
-
-
+        downloadSettings();
         getRequestAddr(ui->checkLongFrame->checkState());
+        ui->menutest->addAction("О программе",this,SLOT(aboutHartTester()));
+        ui->menutest->addAction("O Qt",this,SLOT(aboutQt()));
+
+
     }
 MainWindow::~MainWindow()
 {
-    QString fileDir = QString("GhStatus.txt");
-    QFile file1(fileDir);
-    if(!file1.open(QIODevice::WriteOnly | QIODevice::Text))
-    {
-
-    }
-    QString saveVar;
-    QString ad = ui->comboBoxAddress->currentText();        saveVar = ad+" ";
-    ad = QString::number(ui->comboBoxFunc->currentIndex()); saveVar =saveVar+ad+" ";
-    ad = ui->spinBox->text();                               saveVar =saveVar+ad+" ";
-    if(ui->checkLongFrame->checkState())
-    {
-        ad = "1";
-    }else
-    {
-        ad = "0";
-    }                                                       saveVar =saveVar+ad+" ";
-    ad = QString::number(ui->tabWidget->currentIndex());    saveVar =saveVar+ad+" ";
-    ad = ui->spinData91->text();                            saveVar =saveVar+ad+" ";
-    ad = ui->lineAddr91->text();                            saveVar =saveVar+ad+" ";
-    ad = ui->lineEdit_2->text();                            saveVar =saveVar+ad+" ";
-    QByteArray d = saveVar.toUtf8();
-    file1.write(d);
-    file1.close();
+    saveSettings();
     serial->close();
     delete ui;
+}
+void MainWindow::connections()
+{
+
+    connect(ui->actionDialog,            &QAction::triggered,  &setDialog,&Dialog::show);
+
+    connect(serial,                     &QSerialPort::readyRead,this,   &MainWindow::readData);             //slot recieve data from COM port
+    connect(timer,                      &QTimer::timeout,       this,   &MainWindow::showTime);             //slot timer for sending loop request
+    connect(timerFindDevice,            &QTimer::timeout,       this,   &MainWindow::sendFindRequest);      //slot timer for sending find request
+    connect(ui->buttonResetAddr,        &QPushButton::clicked,  this,   &MainWindow::ResetAddressInit);     //slot button for reset combobox address
+    connect(ui->pushButton,             &QPushButton::clicked,  this,   &MainWindow::connectCOM);           //slot button for connection COM port
+    connect(ui->buttonClose,            &QPushButton::clicked,  this,   &MainWindow::closeCOM);             //slot button for closing COM port
+    connect(ui->buttonSend,             &QPushButton::clicked,  this,   &MainWindow::sendRequest);          //slot button for closing COM port
+    connect(ui->buttonClear,            &QPushButton::clicked,  this,   &MainWindow::clearText);            //slot button for clear developer TextEEdit
+    connect(ui->buttonTimerStart,       &QPushButton::clicked,  this,   &MainWindow::startLoop);            //slot button start timer sending loop request
+    connect(ui->buttonTimerStop,        &QPushButton::clicked,  this,   &MainWindow::stopLoop);             //slot button stop timer sending loop request
+    connect(ui->pushButton_7,           &QPushButton::clicked,  this,   &MainWindow::create91Request);      //slot button create request drom data for request91
+    connect(ui->pushButton_10,          &QPushButton::clicked,  this,   &MainWindow::stopLoopFunction3);    //slot button start timer for sending loop request for tab Function3
+    connect(ui->pushButton_11,          &QPushButton::clicked,  this,   &MainWindow::clearTable);           //slot button clear table for tab Function 3
+    connect(ui->buttonFindDevice,       &QPushButton::clicked,  this,   &MainWindow::findDevice);           //slot button start timer for sending find request
+    connect(ui->buttonFunction3Send,    &QPushButton::clicked,  this,   &MainWindow::Function3Send);        //slot button for sending request for tab Function3
+    connect(ui->buttonFunction3Loop,    &QPushButton::clicked,  this,   &MainWindow::startLoopFunction3);   //slot button start timer for sending loop request for tab Function3
+    connect(ui->buttonSpan,             &QPushButton::clicked,  this,   &MainWindow::spanRequest);          //slot button for sending Span request for tab Calibration
+    connect(ui->buttonZero,             &QPushButton::clicked,  this,   &MainWindow::zeroRequest);          //slot button for sending Zero request for tab Calibration
+    connect(ui->buttonZeroFirstVar,     &QPushButton::clicked,  this,   &MainWindow::zeroFirstVarRequest);  //slot button for sending request zero first variable for tab Calibration
+    connect(ui->linePassword,           &QLineEdit::textEdited, this,   &MainWindow::checkPassword);
+    connect(ui->buttonSetAddress,       &QPushButton::clicked,  this,   &MainWindow::setAddress);
+    connect(ui->buttonSetMode,          &QPushButton::clicked,  this,   &MainWindow::setMode);
+    connect(ui->buttonSetMaxValue,      &QPushButton::clicked,  this,   &MainWindow::setMaxValue);
+    connect(ui->buttonSetMaxValue_2,    &QPushButton::clicked,  this,   &MainWindow::setMaxValue_2);
+    connect(ui->buttonMovingAverage_1,  &QPushButton::clicked,  this,   &MainWindow::setMovingAverage_1);
+    connect(ui->buttonMovingAverage_2,  &QPushButton::clicked,  this,   &MainWindow::setMovingAverage_2);
+    connect(ui->buttonSetA_40,          &QPushButton::clicked,  this,   &MainWindow::setA_40);
+    connect(ui->buttonSetA_41,          &QPushButton::clicked,  this,   &MainWindow::setA_41);
+    connect(ui->buttonSetA_42,          &QPushButton::clicked,  this,   &MainWindow::setA_42);
+    connect(ui->buttonGetAddress,       &QPushButton::clicked,  this,   &MainWindow::getAddress);
+    connect(ui->buttonGetMode,          &QPushButton::clicked,  this,   &MainWindow::getMode);
+    connect(ui->buttonGetMaxValue,      &QPushButton::clicked,  this,   &MainWindow::getMaxValue);
+    connect(ui->buttonGetMaxValue_2,    &QPushButton::clicked,  this,   &MainWindow::getMaxValue_2);
+    connect(ui->buttonGetMovingAverage_1,&QPushButton::clicked, this,   &MainWindow::getMovingAverage_1);
+    connect(ui->buttonGetMovingAverage_2,&QPushButton::clicked, this,   &MainWindow::getMovingAverage_2);
+    connect(ui->buttonGetA_40,          &QPushButton::clicked,  this,   &MainWindow::getA_40);
+    connect(ui->buttonGetA_41,          &QPushButton::clicked,  this,   &MainWindow::getA_41);
+    connect(ui->buttonGetA_42,          &QPushButton::clicked,  this,   &MainWindow::getA_42);
+    connect(ui->buttonSetFixedCurrent,  &QPushButton::clicked,  this,   &MainWindow::setValueFixedCurrent);
+    connect(ui->buttonGetCurrent,       &QPushButton::clicked,  this,   &MainWindow::getCurrent);
+    connect(ui->buttonGetPressue,       &QPushButton::clicked,  this,   &MainWindow::getPressue);
+    connect(ui->buttonUpdateCom,        &QPushButton::clicked,  this,   &MainWindow::updateCom);
+    connect(ui->buttonFindCoef,         &QPushButton::clicked,  this,   &MainWindow::findCoef);
+    connect(ui->buttonClearCalibration, &QPushButton::clicked,  this,   &MainWindow::clearCalibrationData);
+}
+void MainWindow::downloadSettings()
+{
+    QSettings settings("STLab","HartTester");
+    ui->tabWidget->setCurrentIndex      (settings.value("/Parameters/CurrentTab").toInt());
+    ui->comboBoxAddress->setCurrentText (settings.value("/Parameters/CurrentFunc").toString());
+    ui->comboBoxFunc->setCurrentIndex   (settings.value("/Parameters/CurrentIndex").toInt());
+    ui->spinBox->setValue               (settings.value("/Parameters/CurrentPreamble").toInt());
+    if(                                  settings.value("/Parameters/CurrentFrame").toBool())
+    {
+        ui->checkLongFrame->setCheckState(Qt::Checked);
+    }
+    else
+    {
+        ui->checkLongFrame->setCheckState(Qt::Unchecked);
+    }
+    ui->spinData91->setValue(           settings.value("/Parameters/CurrentData91").toInt());
+    ui->lineAddr91->setText(            settings.value("/Parameters/CurrentAddr91").toString());
+    ui->lineEdit_2->setText(            settings.value("/Parameters/CurrentAddr51").toString());
+    ui->comboBoxAddressFunc3_1->setCurrentIndex(settings.value("/Parameters/AddrFunc3_1").toInt());
+    ui->comboBoxAddressFunc3_2->setCurrentIndex(settings.value("/Parameters/AddrFunc3_2").toInt());
+    ui->comboBoxAddressFunc3_3->setCurrentIndex(settings.value("/Parameters/AddrFunc3_3").toInt());
+    ui->comboBoxAddressFunc3_4->setCurrentIndex(settings.value("/Parameters/AddrFunc3_4").toInt());
+    ui->comboBoxAddressFunc3_5->setCurrentIndex(settings.value("/Parameters/AddrFunc3_5").toInt());
+}
+void MainWindow::saveSettings()
+{
+    QSettings settings("STLab","HartTester");
+    settings.setValue("/Parameters/CurrentAddress", ui->comboBoxAddress->currentText());
+    settings.setValue("/Parameters/CurrentFunc",    ui->comboBoxFunc->currentIndex());
+    settings.setValue("/Parameters/CurrentPreamble",ui->spinBox->text());
+    settings.setValue("/Parameters/CurrentFrame",   ui->checkLongFrame->checkState());
+    settings.setValue("/Parameters/CurrentTab",     ui->tabWidget->currentIndex());
+    settings.setValue("/Parameters/CurrentData91",  ui->spinData91->value());
+    settings.setValue("/Parameters/CurrentAddr91",  ui->lineAddr91->text());
+    settings.setValue("/Parameters/CurrentAddr51",  ui->lineEdit_2->text());
+    settings.setValue("/Parameters/AddrFunc3_1",    ui->comboBoxAddressFunc3_1->currentIndex());
+    settings.setValue("/Parameters/AddrFunc3_2",    ui->comboBoxAddressFunc3_2->currentIndex());
+    settings.setValue("/Parameters/AddrFunc3_3",    ui->comboBoxAddressFunc3_3->currentIndex());
+    settings.setValue("/Parameters/AddrFunc3_4",    ui->comboBoxAddressFunc3_4->currentIndex());
+    settings.setValue("/Parameters/AddrFunc3_5",    ui->comboBoxAddressFunc3_5->currentIndex());
+    //settings.setValue("/Parameters/SetA41",         ui->lineEditSetA_41->text().toFloat());
 }
 void MainWindow::ResetAddressInit()
 {
@@ -432,6 +446,20 @@ void MainWindow::showHideTableRow(QString r, bool t){
         }
     }
 }
+void MainWindow::updateCom()
+{
+    ui->comboBox->clear();
+    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
+                ui->comboBox->addItem(info.portName());
+}
+void MainWindow::aboutHartTester()
+{
+    QMessageBox::about(this, "О программе", "HartTester Program \nVer. 0.20181101a");
+}
+void MainWindow::aboutQt()
+{
+    QMessageBox::aboutQt(this);
+}
 void MainWindow::connectCOM()//connect
 {
     serial->open(QSerialPort::ReadWrite);
@@ -470,7 +498,14 @@ void MainWindow::sendRequest()//send
 {
 
     //QThread::msleep(270);
-    ui->pushButton_2->setEnabled(false);
+    if(serial->isOpen()){
+        ui->lineEditStatus->clear();
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(0,255,0);}");
+    }
+    else {
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+    }
     serial->setRequestToSend(0);
     QString textRequest = ui->lineRequest->text();
     QByteArray text =QByteArray(textRequest.toLocal8Bit());
@@ -482,6 +517,10 @@ void MainWindow::sendRequest()//send
     QByteArray hex = QByteArray::fromHex(text);
     serial->write(hex,hex.length());
     answerIsGet = false;
+    if(serial->isOpen()){
+        ui->lineEditStatus->setText("ОЖИДАНИЕ ОТВЕТА");
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(0,255,0);color:white;font:bold}");
+    }
     if(ui->checkAltView->checkState()){
         ui->textEdit->clear();
     }
@@ -491,7 +530,7 @@ void MainWindow::sendRequest()//send
         //case 1: textRequestOut = ui->textEditFunction3;break;
         default: textRequestOut = ui->textEdit;break;
     }
-    if(int(ui->tabWidget->currentIndex()) == 0 || int(ui->tabWidget->currentIndex()) == 2){
+    if(1 || int(ui->tabWidget->currentIndex()) == 0 || int(ui->tabWidget->currentIndex()) == 2){
         textRequestOut->setTextBackgroundColor(QColor(255,255,255));
         textRequestOut->setTextColor(QColor(0,0,0));
         textRequestOut->insertPlainText(QString("\n")+textRequest+QString(" "));
@@ -505,7 +544,6 @@ void MainWindow::sendRequest()//send
 }
 void MainWindow::readData()//read data
 {
-
 
     QStandardItem *item;
     QStringList horizontalHeader;
@@ -524,7 +562,6 @@ void MainWindow::readData()//read data
     serial->read(buf,bytesAvaible);
     serial->clear(QSerialPort::Input);
     int i = 0;
-    bool bds;
     QTextEdit *text_out;
     switch (int(ui->tabWidget->currentIndex()))
     {
@@ -554,14 +591,11 @@ void MainWindow::readData()//read data
                 if(b.CrcIsCorrect())
                 {
                     answerIsGet = true;
-                    ui->pushButton_2->setEnabled(true);
+                    ui->lineEditStatus->setText("ОТВЕТ ПОЛУЧЕН");
                 }
                 if (int(ui->tabWidget->currentIndex())==1 && !timerFindDevice->isActive()) {
                     //text_out->setTextBackgroundColor(QColor(0,0,0));
                     //text_out->setTextColor(QColor(255,255,255));
-
-                    bool bds;
-                    bds = b.CrcIsCorrect();
                     char *zData = new char [int(b.getnDataByte())];
                     zData = b.getData();
                     union{
@@ -577,7 +611,7 @@ void MainWindow::readData()//read data
                     {
                         fg = 1;
                     }
-                    if(bds)
+                    if(b.CrcIsCorrect())
                     {
                         item = new QStandardItem(QString("Ok"));
                         item->setBackground(Qt::green);
@@ -596,6 +630,21 @@ void MainWindow::readData()//read data
                     else gh = ghb;
                     QString fileDir = QString("data/data_")+QString(gh)+QString(".txt");
                     QFile file1(fileDir);
+
+                    QString fileDirCalibration;
+                    if(ui->checkBoxCakibrationMiddle->checkState())
+                    {
+                        fileDirCalibration = QString("data/dataCalibrationMiddle_")+QString(gh)+QString(".txt");
+                    }else if(ui->checkBoxCakibrationLow->checkState())
+                    {
+                       fileDirCalibration = QString("data/dataCalibrationLow_")+QString(gh)+QString(".txt");
+                    }else if(ui->checkBoxCakibrationHigh->checkState())
+                    {
+                        fileDirCalibration = QString("data/dataCalibrationHigh_")+QString(gh)+QString(".txt");
+                    }
+
+                    QFile fileCalibration;
+                    fileCalibration.setFileName(fileDirCalibration);
                     if(!file1.open(QIODevice::Append | QIODevice::Text))
                     {
                         item = new QStandardItem(QString("Ошибка открытия"));
@@ -609,50 +658,72 @@ void MainWindow::readData()//read data
                         item->setBackground(QColor(0,128,128));
                         model->setItem(numberRow, 7, item);
                     }
+                    bool IsWriteCalibration;
+                    IsWriteCalibration = ui->checkBoxCakibrationHigh->checkState() || ui->checkBoxCakibrationLow->checkState() ||ui->checkBoxCakibrationMiddle->checkState();
+                    if(IsWriteCalibration)
+                    {
+                        if(!fileCalibration.open(QIODevice::Append | QIODevice::Text))
+                        {
+                            ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgba(255,64,0);color:white}");
+                            ui->lineEditStatus->setText("Файл калибровки не записан");
+                        }else
+                        {
+                            ui->lineEditStatus->setText("Успешно");
+                        }
+                    }
                     QDateTime timeNow = QDateTime::currentDateTime();
                     item = new QStandardItem(QString(gh));
                     model->setItem(numberRow, 0, item);
-                    if(bds) file1.write(QByteArray(timeNow.toString("dd.MM.yyyy hh:mm:ss").toUtf8())+QByteArray("\t"));
-                    transf.ie[0] = zData[3];
-                    transf.ie[1] = zData[2];
-                    transf.ie[2] = zData[1];
-                    transf.ie[3] = zData[0];
-                    item = new QStandardItem(QString("%1").number(transf.f,'e',4));
+                    if(b.CrcIsCorrect()) file1.write(QByteArray(timeNow.toString("dd.MM.yyyy hh:mm:ss").toUtf8())+QByteArray("\t"));
+                    transf.ie[0] = zData[3];//запись тока
+                    transf.ie[1] = zData[2];//запись тока
+                    transf.ie[2] = zData[1];//запись тока
+                    transf.ie[3] = zData[0];//запись тока
+                    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
                     model->setItem(numberRow, 1, item);
-                    if(bds) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
-                    transf.ie[0] = zData[8];
-                    transf.ie[1] = zData[7];
-                    transf.ie[2] = zData[6];
-                    transf.ie[3] = zData[5];
-                    item = new QStandardItem(QString("%1").number(transf.f,'e',4));
+                    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+                    transf.ie[0] = zData[8];//запись первой перемнной
+                    transf.ie[1] = zData[7];//запись первой перемнной
+                    transf.ie[2] = zData[6];//запись первой перемнной
+                    transf.ie[3] = zData[5];//запись первой перемнной
+                    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
                     model->setItem(numberRow, 2, item);
-                    if(bds) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
-                    transf.ie[0] = zData[13];
-                    transf.ie[1] = zData[12];
-                    transf.ie[2] = zData[11];
-                    transf.ie[3] = zData[10];
-                    item = new QStandardItem(QString("%1").number(transf.f,'e',4));
+                    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+                    if(b.CrcIsCorrect() && IsWriteCalibration) fileCalibration.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+                    transf.ie[0] = zData[13];//запись второй перемнной
+                    transf.ie[1] = zData[12];//запись второй перемнной
+                    transf.ie[2] = zData[11];//запись второй перемнной
+                    transf.ie[3] = zData[10];//запись второй перемнной
+                    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
                     model->setItem(numberRow, 3, item);
-                    if(bds) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
-                    transf.ie[0] = zData[18];
-                    transf.ie[1] = zData[17];
-                    transf.ie[2] = zData[16];
-                    transf.ie[3] = zData[15];
-                    item = new QStandardItem(QString("%1").number(transf.f,'e',4));
+                    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+                    if(b.CrcIsCorrect() && IsWriteCalibration) fileCalibration.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+                    transf.ie[0] = zData[18];//запись третьей перемнной
+                    transf.ie[1] = zData[17];//запись третьей перемнной
+                    transf.ie[2] = zData[16];//запись третьей перемнной
+                    transf.ie[3] = zData[15];//запись третьей перемнной
+                    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
                     model->setItem(numberRow, 4, item);
-                    if(bds) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
-                    transf.ie[0] = zData[23];
-                    transf.ie[1] = zData[22];
-                    transf.ie[2] = zData[21];
-                    transf.ie[3] = zData[20];
-                    item = new QStandardItem(QString("%1").number(transf.f,'e',4));
+                    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+                    transf.ie[0] = zData[23];//запись четвертой перемнной
+                    transf.ie[1] = zData[22];//запись четвертой перемнной
+                    transf.ie[2] = zData[21];//запись четвертой перемнной
+                    transf.ie[3] = zData[20];//запись четвертой перемнной
+                    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
                     model->setItem(numberRow, 5, item);
-                    if(bds) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\n"));
+                    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\n"));
+                    if(b.CrcIsCorrect() && IsWriteCalibration) fileCalibration.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
                     ui->tableView->setModel(model);
                     ui->tableView->resizeRowsToContents();
                     ui->tableView->resizeColumnsToContents();
                     numberRow++;
+//                    if(numberRow > 6)
+//                    {
+//                        model->removeRows(1,numberRow);
+//                        numberRow = 1;
+//                    }
                     file1.close();
+                    fileCalibration.close();
                 }
                 if(!ui->checkAltView->checkState())
                 {
@@ -662,7 +733,6 @@ void MainWindow::readData()//read data
                     //ui->textEdit->insertPlainText(outText+QString(""));
                     if(int(ui->tabWidget->currentIndex())==0)
                     {
-                        bds = b.CrcIsCorrect();
                         if(!b.CrcIsCorrect()){
                             text_out->setTextBackgroundColor(QColor(255,0,0));
                             text_out->setTextColor(QColor(0,0,0));
@@ -685,8 +755,6 @@ void MainWindow::readData()//read data
                     answer b(nSymAnsGet);
                     b.createAnswer(ansGet,nSymAnsGet);
                     b.analysis();
-                    bool bds;
-                    bds = b.CrcIsCorrect();
                     int n = 0;
                     char *zData = new char [int(b.getnDataByte())];
                     zData = b.getData();
@@ -748,8 +816,7 @@ void MainWindow::showTime(){
 }
 void MainWindow::startLoop()//timerstart
 {
-    QString tmr2 = ui->lineEdit->text();
-    timer->start(tmr2.toInt());
+    timer->start(static_cast<int>(ui->doubleSpinBoxTimerSend->value()*1000));
     if(ui->comboBoxFunc->currentData().toInt() == 91){
         ui->buttonSend->setEnabled(false);
         ui->buttonTimerStart->setEnabled(false);
@@ -829,7 +896,7 @@ void MainWindow::on_comboBoxFunc_currentIndexChanged()//отклик на изм
     getRequestAddr(ui->checkLongFrame->checkState());
 
 }
-void MainWindow::on_spinBox_valueChanged(int arg1)//изменение длины преамбулы
+void MainWindow::on_spinBox_valueChanged()//изменение длины преамбулы
 {
 
     data91 = new unsigned char[int(ui->spinData91->value())+1];
@@ -837,7 +904,7 @@ void MainWindow::on_spinBox_valueChanged(int arg1)//изменение длин�
     //getRequestAddr();
     createRequestOut();
 }
-void MainWindow::on_checkLongFrame_stateChanged(int arg1)//отклик на длину фрейма
+void MainWindow::on_checkLongFrame_stateChanged()//отклик на длину фрейма
 {
     data91 = new unsigned char[int(ui->spinData91->value())+1];
     changedInByteExpected();
@@ -1041,102 +1108,113 @@ void MainWindow::create91Request()//создание 91 запроса
     createRequestOut();
     //ui->pushButton_7->setEnabled(false);
 }
+void MainWindow::requestFunction3(QComboBox *f)
+{
+    unsigned char *currentAddr = new unsigned char [5];
+    if(!ui->checkLongFrame->checkState())
+    {
+        QString textAddr = f->currentText();
+        QByteArray text =QByteArray(textAddr.toLocal8Bit());
+        QByteArray hex = QByteArray::fromHex(text);
+        currentAddr[0] = char(hex[0]);
+    }
+    else
+    {
+        QString textAddr = f->currentText();
+        QByteArray text =QByteArray(textAddr.toLocal8Bit());
+        QByteArray hex = QByteArray::fromHex(text);
+        currentAddr[0] = 0x0f;
+        currentAddr[1] = 0x02;
+        currentAddr[2] = char(hex[0]);
+        currentAddr[3] = 0xfd;
+        currentAddr[4] = 0xef;
+    }
+    request a;
+    bool longFrame = ui->checkLongFrame->checkState();
+    getRequestAddr(longFrame);
+    a.setLongFrame(longFrame);
+    a.setPreambleLength(ui->spinBox->value());
+    a.setAddress(currentAddr);
+    a.function3();
+    answerIsGet = false;
+    QByteArray req = QByteArray(a.getRequest(),a.getRequestLength()).toHex();
+    int i = 0;
+    for(i = 2; i<req.length();i+=3){
+        req.insert(i,' ');
+    }
+    ui->lineRequest->setText(req);
+    inBytesExpected = int(ui->spinBox->value())+31+2*int(ui->checkLongFrame->checkState());
+    sendRequest();
+    countTimerFinc3 = 0;
+}
 void MainWindow::Function3Send()//send Function3
 {
-    if(ui->checkDevice_1->checkState()){
-        requset1IsSend = true;
-        timerFunction3->start(timerSendRequest);
-        requestIsSend = 0;
+    connect(timerFunction3,&QTimer::timeout,this,&MainWindow::sendTimerRequest);
+    //timerSendRequest = 150;
+    if(ui->checkDevice_1->checkState()) requset1IsSend = true;
+    if(ui->checkDevice_2->checkState()) requset2IsSend = true;
+    if(ui->checkDevice_3->checkState()) requset3IsSend = true;
+    if(ui->checkDevice_4->checkState()) requset4IsSend = true;
+    if(ui->checkDevice_5->checkState()) requset5IsSend = true;
+    answerIsGet = true;
+    countTimerFinc3 = 0;
+    allRequestIsSend = false;
+    if(requset5IsSend || requset4IsSend || requset3IsSend || requset2IsSend || requset1IsSend)
+    {
+       timerFunction3->start(timerSendRequest);
     }
-    if(ui->checkDevice_2->checkState()){
-        requset2IsSend = true;
-        if(!timerFunction3->isActive())
-        {
-            timerFunction3->start(timerSendRequest);
-            requestIsSend = 1;
-        }
-    }
-    if(ui->checkDevice_3->checkState()){
-        requset3IsSend = true;
-        if(!timerFunction3->isActive())
-        {
-            timerFunction3->start(timerSendRequest);
-            requestIsSend = 2;
-        }
-    }
-    if(ui->checkDevice_4->checkState()){
-        requset4IsSend = true;
-        if(!timerFunction3->isActive())
-        {
-            timerFunction3->start(timerSendRequest);
-            requestIsSend = 3;
-        }
-    }
-    if(ui->checkDevice_5->checkState()){
-        requset5IsSend = true;
-        if(!timerFunction3->isActive())
-        {
-            timerFunction3->start(timerSendRequest);
-            requestIsSend = 4;
-        }
-    }
-}
-void MainWindow::startLoopFunction3()
-{
-    int pLo = 1;
-    MainWindow::Function3Send();
-    if(ui->checkDevice_1->checkState()){
-        pLo++;
-    }
-    if(ui->checkDevice_2->checkState()){
-        pLo++;
-    }
-    if(ui->checkDevice_3->checkState()){
-        pLo++;
-    }
-    if(ui->checkDevice_4->checkState()){
-        pLo++;
-    }
-    if(ui->checkDevice_5->checkState()){
-        pLo++;
-    }
-    timerFunction3Loop->start(pLo*timerSendRequest);
-}
-void MainWindow::stopLoopFunction3()
-{
-    timerFunction3Loop->stop();
-}
-void MainWindow::clearTable()
-{
-    model->clear();
-    numberRow = 0;
-}
-void MainWindow::on_tabWidget_currentChanged(int index)
-{
-    changedInByteExpected();
-    switch (index) {
-        case 0:        
-            ui->comboBoxFunc->setCurrentIndex(lastFunc);
-            //ui->comboBoxFunc->setCurrentIndex(0);
-            getRequestAddr(ui->checkLongFrame->checkState());
-            break;
-        case 1:
-            lastFunc = ui->comboBoxFunc->currentIndex();
-            ui->comboBoxFunc->setCurrentIndex(1); break;
-    }
-}
-void MainWindow::on_lineAddrShort_textChanged()
-{
-    getRequestAddr(ui->checkLongFrame->checkState());
-}
-void MainWindow::on_lineAddrLong_textChanged()
-{
-    getRequestAddr(ui->checkLongFrame->checkState());
 }
 void MainWindow::sendTimerRequest()
 {
-    ui->comboBoxAddressFunc3_1->currentText();
-    bool fsend = false;
+    if(countTimerFinc3 >(3000/timerSendRequest))//timeout
+    {
+        answerIsGet = true;
+    }
+    if (ui->checkDevice_1->checkState() && answerIsGet && requset1IsSend)
+    {
+        requestFunction3(ui->comboBoxAddressFunc3_1);
+        requset1IsSend = false;
+        return void();
+    }
+    if (ui->checkDevice_2->checkState() && answerIsGet && requset2IsSend)
+    {
+        requestFunction3(ui->comboBoxAddressFunc3_2);
+        requset2IsSend = false;
+        return void();
+    }
+    if (ui->checkDevice_3->checkState() && answerIsGet && requset3IsSend)
+    {
+        requestFunction3(ui->comboBoxAddressFunc3_3);
+        requset3IsSend = false;
+        return void();
+    }
+    if (ui->checkDevice_4->checkState() && answerIsGet && requset4IsSend)
+    {
+        requestFunction3(ui->comboBoxAddressFunc3_4);
+        requset4IsSend = false;
+        return void();
+    }
+    if (ui->checkDevice_5->checkState() && answerIsGet && requset5IsSend)
+    {
+        requestFunction3(ui->comboBoxAddressFunc3_5);
+        requset5IsSend = false;
+        return void();
+    }
+    countTimerFinc3++;
+    qDebug()<<countTimerFinc3;
+    if(!requset5IsSend && !requset4IsSend && !requset3IsSend && !requset2IsSend && !requset1IsSend)
+    {
+       allRequestIsSend = true;
+       countTimerFinc3 = 0;
+       disconnect(timerFunction3,&QTimer::timeout,this,&MainWindow::sendTimerRequest);
+       timerFunction3->stop();
+       qDebug()<<"timerstop";
+    }
+//    timerFunction3->stop();
+//    qDebug()<<"timerstop"<<endl;
+
+
+    /*bool fsend = false;
     if(ui->checkDevice_1->checkState() && !fsend && requset1IsSend)
     {
         if(!ui->checkLongFrame->checkState())
@@ -1223,42 +1301,79 @@ void MainWindow::sendTimerRequest()
         fsend = true;
     }
     requestIsSend++;
-    qDebug()<<requestIsSend;
-    if(requestIsSend == 5)
+    //qDebug()<<requestIsSend;
+    if(requestIsSend == pLo)
     {
         timerFunction3->stop();
         requestIsSend = 0;
+    }*/
+}
+void MainWindow::sendTimerRequestLoop()
+{
+    if(allRequestIsSend)
+    {
+        Function3Send();
     }
 }
-void MainWindow::sendTimerRequestLoop(){
-    MainWindow::Function3Send();
+void MainWindow::startLoopFunction3()
+{    
+    connect(timerFunction3Loop,&QTimer::timeout,this,&MainWindow::sendTimerRequestLoop);
+    Function3Send();
+    timerFunction3Loop->start(timerSendRequest);
+}
+void MainWindow::stopLoopFunction3()
+{
+    disconnect(timerFunction3Loop,&QTimer::timeout,this,&MainWindow::sendTimerRequestLoop);
+    timerFunction3Loop->stop();
+}
+void MainWindow::clearTable()
+{
+    model->clear();
+    numberRow = 0;
+}
+void MainWindow::on_tabWidget_currentChanged(int index)
+{
+    changedInByteExpected();
+    switch (index) {
+        case 0:        
+            ui->comboBoxFunc->setCurrentIndex(lastFunc);
+            //ui->comboBoxFunc->setCurrentIndex(0);
+            getRequestAddr(ui->checkLongFrame->checkState());
+            break;
+        case 1:
+            lastFunc = ui->comboBoxFunc->currentIndex();
+            ui->comboBoxFunc->setCurrentIndex(1); break;
+    }
+}
+void MainWindow::on_lineAddrShort_textChanged()
+{
+    getRequestAddr(ui->checkLongFrame->checkState());
+}
+void MainWindow::on_lineAddrLong_textChanged()
+{
+    getRequestAddr(ui->checkLongFrame->checkState());
 }
 
 void MainWindow::on_checkDevice_1_stateChanged()
 {
     showHideTableRow(ui->comboBoxAddressFunc3_1->currentText(), ui->checkDevice_1->checkState());
 }
-
 void MainWindow::on_checkDevice_2_stateChanged()
 {
     showHideTableRow(ui->comboBoxAddressFunc3_2->currentText(), ui->checkDevice_2->checkState());
 }
-
 void MainWindow::on_checkDevice_3_stateChanged()
 {
     showHideTableRow(ui->comboBoxAddressFunc3_3->currentText(), ui->checkDevice_3->checkState());
 }
-
 void MainWindow::on_checkDevice_4_stateChanged()
 {
     showHideTableRow(ui->comboBoxAddressFunc3_4->currentText(), ui->checkDevice_4->checkState());
 }
-
 void MainWindow::on_checkDevice_5_stateChanged()
 {
     showHideTableRow(ui->comboBoxAddressFunc3_5->currentText(), ui->checkDevice_5->checkState());
 }
-
 void MainWindow::findDevice()//запуск таймера на поиск
 {
 
@@ -1297,7 +1412,6 @@ void MainWindow::findDevice()//запуск таймера на поиск
     sendRequest();
     //inBytesExpected = int(ui->spinBox->value())+19+2*int(ui->checkLongFrame->checkState());
 }
-
 void MainWindow::sendFindRequest()//создание запроса на поиск
 {
     ui->comboBoxFunc->setCurrentIndex(0);
@@ -1345,8 +1459,7 @@ void MainWindow::sendFindRequest()//создание запроса на пои�
         sendRequest();
     }
 }
-
-void MainWindow::on_comboBoxAddress_highlighted(const QString &arg1)
+void MainWindow::on_comboBoxAddress_highlighted()
 {
         getRequestAddr(ui->checkLongFrame->checkState());
         ui->comboBoxAddressFunc3_1->setCurrentIndex(ui->comboBoxAddress->currentIndex());
@@ -1356,8 +1469,7 @@ void MainWindow::on_comboBoxAddress_highlighted(const QString &arg1)
         ui->comboBoxAddressFunc3_5->setCurrentIndex(ui->comboBoxAddress->currentIndex());
         ui->comboBoxAddressFunc3_5->setCurrentIndex(ui->comboBoxAddress->currentIndex());
 }
-
-void MainWindow::on_comboBoxAddress_currentIndexChanged(int index)
+void MainWindow::on_comboBoxAddress_currentIndexChanged()
 {
         getRequestAddr(ui->checkLongFrame->checkState());
         ui->comboBoxAddressFunc3_1->setCurrentIndex(ui->comboBoxAddress->currentIndex());
@@ -1370,9 +1482,14 @@ void MainWindow::on_comboBoxAddress_currentIndexChanged(int index)
 
 void MainWindow::spanRequest()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationSpan);
     request a;
-    bool longFrame = false;
+    bool longFrame = ui->checkLongFrame->checkState();
     getRequestAddr(longFrame);
     a.setLongFrame(longFrame);
     a.setPreambleLength(ui->spinBox->value());
@@ -1397,23 +1514,29 @@ void MainWindow::indicateCalibrationSpan()
     {
         ui->label_3->setStyleSheet(styleSheetCalibrationOk);
         countIndicateCalibration = 0;
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationSpan);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
-        ui->label_3->setStyleSheet(styleSheetCalibrationDefault);
-        timerCalibration->stop();
+        ui->label_3->setStyleSheet(styleSheetCalibrationDefault);        
         disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationSpan);
+        timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
 
 void MainWindow::zeroRequest()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZero);
     request a;
-    bool longFrame = false;
+    bool longFrame = ui->checkLongFrame->checkState();
     getRequestAddr(longFrame);
     a.setLongFrame(longFrame);
     a.setPreambleLength(ui->spinBox->value());
@@ -1438,23 +1561,29 @@ void MainWindow::indicateCalibrationZero()
     {
         ui->label_4->setStyleSheet(styleSheetCalibrationOk);
         countIndicateCalibration = 0;
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZero);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
-        ui->label_4->setStyleSheet(styleSheetCalibrationDefault);
-        timerCalibration->stop();
+        ui->label_4->setStyleSheet(styleSheetCalibrationDefault);        
         disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZero);
+        timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
 
 void MainWindow::zeroFirstVarRequest()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZeroFirstVar);
     request a;
-    bool longFrame = false;
+    bool longFrame = ui->checkLongFrame->checkState();
     getRequestAddr(longFrame);
     a.setLongFrame(longFrame);
     a.setPreambleLength(ui->spinBox->value());
@@ -1479,14 +1608,15 @@ void MainWindow::indicateCalibrationZeroFirstVar()
     {
         ui->label_5->setStyleSheet(styleSheetCalibrationOk);
         countIndicateCalibration = 0;
+        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZeroFirstVar);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
-        ui->label_5->setStyleSheet(styleSheetCalibrationBad);
-        timerCalibration->stop();
+        ui->label_5->setStyleSheet(styleSheetCalibrationBad);        
         disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZeroFirstVar);
+        timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
@@ -1548,6 +1678,11 @@ void MainWindow::calibrationFunctionsGet(unsigned char *data1,int numberData1)
 
 void MainWindow::setAddress()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     ui->comboBoxSetAddress->setStyleSheet(styleSheetCalibrationComboBoxBad);
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetAddress);
     unsigned char *dataChangeAddress = new unsigned char [2];
@@ -1561,6 +1696,11 @@ void MainWindow::setAddress()
 }
 void MainWindow::setMode()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     ui->comboBoxSetMode->setStyleSheet(styleSheetCalibrationComboBoxBad);
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMode);
     unsigned char *dataChangeAddress = new unsigned char [2];
@@ -1572,6 +1712,11 @@ void MainWindow::setMode()
 }
 void MainWindow::setMaxValue()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     ui->lineEditSetMaxValue->setStyleSheet(styleSheetCalibrationLineEditBad);
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue);
     float re = ui->lineEditSetMaxValue->text().toFloat();
@@ -1592,6 +1737,11 @@ void MainWindow::setMaxValue()
 }
 void MainWindow::setMaxValue_2()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     ui->lineEditSetMaxValue_2->setStyleSheet(styleSheetCalibrationLineEditBad);
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue_2);
     float re = ui->lineEditSetMaxValue_2->text().toFloat();
@@ -1612,6 +1762,11 @@ void MainWindow::setMaxValue_2()
 }
 void MainWindow::setMovingAverage_1()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     ui->spinBoxMovingAverage_1->setStyleSheet(styleSheetCalibrationSpinBoxBad);
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_1);
     unsigned char *dataChangeAddress = new unsigned char [2];
@@ -1622,6 +1777,11 @@ void MainWindow::setMovingAverage_1()
 }
 void MainWindow::setMovingAverage_2()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     ui->spinBoxMovingAverage_2->setStyleSheet(styleSheetCalibrationSpinBoxBad);
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_2);
     unsigned char *dataChangeAddress = new unsigned char [2];
@@ -1632,6 +1792,11 @@ void MainWindow::setMovingAverage_2()
 }
 void MainWindow::setA_40()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     ui->lineEditSetA_40->setStyleSheet(styleSheetCalibrationLineEditBad);
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_40);
     float re = ui->lineEditSetA_40->text().toFloat();
@@ -1652,6 +1817,11 @@ void MainWindow::setA_40()
 }
 void MainWindow::setA_41()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     ui->lineEditSetA_41->setStyleSheet(styleSheetCalibrationLineEditBad);
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_41);
     float re = ui->lineEditSetA_41->text().toFloat();
@@ -1672,6 +1842,11 @@ void MainWindow::setA_41()
 }
 void MainWindow::setA_42()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     ui->lineEditSetA_42->setStyleSheet(styleSheetCalibrationLineEditBad);
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_42);
     float re = ui->lineEditSetA_42->text().toFloat();
@@ -1693,6 +1868,11 @@ void MainWindow::setA_42()
 
 void MainWindow::getAddress()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetAddress);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x03;
@@ -1702,6 +1882,11 @@ void MainWindow::getAddress()
 }
 void MainWindow::getMode()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMode);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x01;
@@ -1711,6 +1896,11 @@ void MainWindow::getMode()
 }
 void MainWindow::getMaxValue()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMaxValue);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x1e;
@@ -1720,6 +1910,11 @@ void MainWindow::getMaxValue()
 }
 void MainWindow::getMaxValue_2()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMaxValue_2);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x22;
@@ -1729,6 +1924,11 @@ void MainWindow::getMaxValue_2()
 }
 void MainWindow::getMovingAverage_1()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMovingAverage_1);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x0b;
@@ -1738,6 +1938,11 @@ void MainWindow::getMovingAverage_1()
 }
 void MainWindow::getMovingAverage_2()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMovingAverage_2);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x0d;
@@ -1747,6 +1952,11 @@ void MainWindow::getMovingAverage_2()
 }
 void MainWindow::getA_40()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetA_40);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x4e;
@@ -1756,6 +1966,11 @@ void MainWindow::getA_40()
 }
 void MainWindow::getA_41()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetA_41);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x52;
@@ -1765,6 +1980,11 @@ void MainWindow::getA_41()
 }
 void MainWindow::getA_42()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetA_42);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x56;
@@ -1774,6 +1994,11 @@ void MainWindow::getA_42()
 }
 void MainWindow::getPressue()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetPressue);
     unsigned char *data = new unsigned char [2];
     data[0] = 0xcc;
@@ -1783,6 +2008,11 @@ void MainWindow::getPressue()
 }
 void MainWindow::getCurrent()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetCurrent);
     unsigned char *data = new unsigned char [2];
     data[0] = 0xc8;
@@ -2362,4 +2592,116 @@ void MainWindow::indicateSetValueFixedCurrent()
         timerCalibration->stop();
     }
     countIndicateCalibration++;
+}
+
+void MainWindow::on_checkBoxCakibrationMiddle_stateChanged()
+{
+    if(ui->checkBoxCakibrationMiddle->checkState())
+    {
+        ui->checkBoxCakibrationHigh->setCheckState(Qt::Unchecked);
+        ui->checkBoxCakibrationLow->setCheckState(Qt::Unchecked);
+    }
+}
+void MainWindow::on_checkBoxCakibrationLow_stateChanged()
+{
+    if(ui->checkBoxCakibrationLow->checkState())
+    {
+        ui->checkBoxCakibrationHigh->setCheckState(Qt::Unchecked);
+        ui->checkBoxCakibrationMiddle->setCheckState(Qt::Unchecked);
+    }
+}
+void MainWindow::on_checkBoxCakibrationHigh_stateChanged()
+{
+    if(ui->checkBoxCakibrationHigh->checkState())
+    {
+        ui->checkBoxCakibrationLow->setCheckState(Qt::Unchecked);
+        ui->checkBoxCakibrationMiddle->setCheckState(Qt::Unchecked);
+    }
+}
+void MainWindow::findCoef()
+{
+    QString fileDirCalibration;
+    fileDirCalibration = QString("data/dataCalibrationLow_")+ui->comboBoxAddress->currentText()+QString(".txt");
+    QFile fileCalibration(fileDirCalibration);
+    if(!fileCalibration.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(102,0,192);color:white}");
+        ui->lineEditStatus->setText("Файл калибровки не открыт или не существует");
+    }else
+    {
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(143,252,172);color:rgb(3,0,87)}");
+        ui->lineEditStatus->setText("Файл калибровки Открыт");
+    }
+    QString hLow(fileCalibration.readAll());
+    fileCalibration.close();
+    float *ULow = new float[3];
+    ULow = findMx(hLow);
+
+    fileDirCalibration = QString("data/dataCalibrationMiddle_")+ui->comboBoxAddress->currentText()+QString(".txt");
+    fileCalibration.setFileName(fileDirCalibration);
+    if(!fileCalibration.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        ui->lineEditStatus->setText("Файл калибровки не открыт или не существует");
+    }else
+    {
+        ui->lineEditStatus->setText("Файл калибровки Открыт");
+    }
+    QString hMidle(fileCalibration.readAll());
+    fileCalibration.close();
+    float *UMiddle = new float[3];
+    UMiddle = findMx(hMidle);
+
+    fileDirCalibration = QString("data/dataCalibrationHigh_")+ui->comboBoxAddress->currentText()+QString(".txt");
+    fileCalibration.setFileName(fileDirCalibration);
+    if(!fileCalibration.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        ui->lineEditStatus->setText("Файл калибровки не открыт или не существует");
+    }else
+    {
+        ui->lineEditStatus->setText("Файл калибровки Открыт");
+    }
+    QString hHigh(fileCalibration.readAll());
+    fileCalibration.close();
+    float *UHigh = new float[3];
+    UHigh = findMx(hHigh);
+    float U4n = UMiddle[2];
+    float U4l = ULow[2];
+    float U4h = UHigh[2];
+    float U1l = ULow[0];
+    float U1h = UHigh[0];
+    float U2l = ULow[1];
+    float U2h = UHigh[1];
+
+    float U10 = ui->lineEditMaxValueGet_2->text().toFloat();
+    float U20 = ui->lineEditMaxValueGet_2->text().toFloat();
+    if(ui->lineEditMaxValueGet_2->text() == "nan" || ui->lineEditMaxValueGet_2->text() == "Bad Crc" || ui->lineEditMaxValueGet_2->text() == "")
+    {
+        ui->lineEditStatus->setText("Не получено максимальное значение верхнего диапазона измерения перепада давления");
+        return void();
+    }
+    float Umax = ui->lineEditMaxValueGet->text().toFloat();
+    if(ui->lineEditMaxValueGet->text() == "nan" || ui->lineEditMaxValueGet->text() == "Bad Crc"  || ui->lineEditMaxValueGet->text() == "")
+    {
+        ui->lineEditStatus->setText("Не получено максимальное значение статического давления");
+        return void();
+    }
+    float K1 = Umax/(U1h-U10);
+    float K2 = Umax/(U2h-U20);
+    float a42 = 0,a41 = 0,a40 = 0;
+    a42 = -(K1*U10*U4h - K2*U20*U4h - K1*U10*U4l + K2*U20*U4l + K1*U1h*U4l - K1*U4h*U1l - K2*U2h*U4l + K2*U4h*U2l - K1*U1h*U4n + K2*U2h*U4n + K1*U1l*U4n - K2*U2l*U4n)/((U4h - U4l)*(U4h - U4n)*(U4l - U4n));
+    a41 = (- a42*U4l*U4l + a42*U4n*U4n + K1*(U10 - U1l) - K2*(U20 - U2l))/(U4l - U4n);
+    a40 = - a42*U4n*U4n - a41*U4n;
+    ui->lineEditSetA_42->setText(QString().number(a42));
+    ui->lineEditSetA_41->setText(QString().number(a41));
+    ui->lineEditSetA_40->setText(QString().number(a40));
+
+}
+void MainWindow::clearCalibrationData()
+{
+    removeFile(ui->comboBoxAddress->currentText());
+}
+
+void MainWindow::on_spinBox_2_valueChanged(int arg1)
+{
+    timerSendRequest = arg1;
 }
