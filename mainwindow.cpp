@@ -64,6 +64,24 @@ static bool lastFrame;
 static int pLo = 0;
 static int countTimerFinc3 = 0;
 static bool allRequestIsSend = false;
+static bool requset1FindCoef = 0;
+static bool requset2FindCoef = 0;
+static bool requset3FindCoef = 0;
+static bool requset4FindCoef = 0;
+static bool requset5FindCoef = 0;
+static bool answerAnalisys = 0;
+static float Pkstat = 0;
+static float Uk1h = 0;
+static float Uk2h = 0;
+static float Uk10 = 0;
+static float Uk20 = 0;
+static float U4n = 0;
+static float U4l = 0;
+static float U4h = 0;
+static float U1l = 0;
+static float U1h = 0;
+static float U2l = 0;
+static float U2h = 0;
 
 void ResetAddress()
 {
@@ -153,10 +171,10 @@ void addFunctions(QComboBox *func)
     func->addItem("51.Чтение нескольких регистров",51);
     func->addItem("91.Записть нескольких регистров",91);
 }
-MainWindow::MainWindow(QWidget *parent) :
+HartTester::HartTester(QWidget *parent) :
     QMainWindow(parent),
     setDialog(new Dialog),
-    ui(new Ui::MainWindow),
+    ui(new Ui::HartTester),
     serial(new QSerialPort(this)),    
     timer(new QTimer(this)),
     timerFunction3(new QTimer(this)),
@@ -221,71 +239,72 @@ MainWindow::MainWindow(QWidget *parent) :
         getRequestAddr(ui->checkLongFrame->checkState());
         ui->menutest->addAction("О программе",this,SLOT(aboutHartTester()));
         ui->menutest->addAction("O Qt",this,SLOT(aboutQt()));
+        ui->actionDialog->setEnabled(false);
 
 
     }
-MainWindow::~MainWindow()
+HartTester::~HartTester()
 {
     saveSettings();
     serial->close();
     delete ui;
 }
-void MainWindow::connections()
+void HartTester::connections()
 {
 
     connect(ui->actionDialog,            &QAction::triggered,  &setDialog,&Dialog::show);
 
-    connect(serial,                     &QSerialPort::readyRead,this,   &MainWindow::readData);             //slot recieve data from COM port
-    connect(timer,                      &QTimer::timeout,       this,   &MainWindow::showTime);             //slot timer for sending loop request
-    connect(timerFindDevice,            &QTimer::timeout,       this,   &MainWindow::sendFindRequest);      //slot timer for sending find request
-    connect(ui->buttonResetAddr,        &QPushButton::clicked,  this,   &MainWindow::ResetAddressInit);     //slot button for reset combobox address
-    connect(ui->pushButton,             &QPushButton::clicked,  this,   &MainWindow::connectCOM);           //slot button for connection COM port
-    connect(ui->buttonClose,            &QPushButton::clicked,  this,   &MainWindow::closeCOM);             //slot button for closing COM port
-    connect(ui->buttonSend,             &QPushButton::clicked,  this,   &MainWindow::sendRequest);          //slot button for closing COM port
-    connect(ui->buttonClear,            &QPushButton::clicked,  this,   &MainWindow::clearText);            //slot button for clear developer TextEEdit
-    connect(ui->buttonTimerStart,       &QPushButton::clicked,  this,   &MainWindow::startLoop);            //slot button start timer sending loop request
-    connect(ui->buttonTimerStop,        &QPushButton::clicked,  this,   &MainWindow::stopLoop);             //slot button stop timer sending loop request
-    connect(ui->pushButton_7,           &QPushButton::clicked,  this,   &MainWindow::create91Request);      //slot button create request drom data for request91
-    connect(ui->pushButton_10,          &QPushButton::clicked,  this,   &MainWindow::stopLoopFunction3);    //slot button start timer for sending loop request for tab Function3
-    connect(ui->pushButton_11,          &QPushButton::clicked,  this,   &MainWindow::clearTable);           //slot button clear table for tab Function 3
-    connect(ui->buttonFindDevice,       &QPushButton::clicked,  this,   &MainWindow::findDevice);           //slot button start timer for sending find request
-    connect(ui->buttonFunction3Send,    &QPushButton::clicked,  this,   &MainWindow::Function3Send);        //slot button for sending request for tab Function3
-    connect(ui->buttonFunction3Loop,    &QPushButton::clicked,  this,   &MainWindow::startLoopFunction3);   //slot button start timer for sending loop request for tab Function3
-    connect(ui->buttonSpan,             &QPushButton::clicked,  this,   &MainWindow::spanRequest);          //slot button for sending Span request for tab Calibration
-    connect(ui->buttonZero,             &QPushButton::clicked,  this,   &MainWindow::zeroRequest);          //slot button for sending Zero request for tab Calibration
-    connect(ui->buttonZeroFirstVar,     &QPushButton::clicked,  this,   &MainWindow::zeroFirstVarRequest);  //slot button for sending request zero first variable for tab Calibration
-    connect(ui->linePassword,           &QLineEdit::textEdited, this,   &MainWindow::checkPassword);
-    connect(ui->buttonSetAddress,       &QPushButton::clicked,  this,   &MainWindow::setAddress);
-    connect(ui->buttonSetMode,          &QPushButton::clicked,  this,   &MainWindow::setMode);
-    connect(ui->buttonSetMaxValue,      &QPushButton::clicked,  this,   &MainWindow::setMaxValue);
-    connect(ui->buttonSetMaxValue_2,    &QPushButton::clicked,  this,   &MainWindow::setMaxValue_2);
-    connect(ui->buttonMovingAverage_1,  &QPushButton::clicked,  this,   &MainWindow::setMovingAverage_1);
-    connect(ui->buttonMovingAverage_2,  &QPushButton::clicked,  this,   &MainWindow::setMovingAverage_2);
-    connect(ui->buttonSetA_40,          &QPushButton::clicked,  this,   &MainWindow::setA_40);
-    connect(ui->buttonSetA_41,          &QPushButton::clicked,  this,   &MainWindow::setA_41);
-    connect(ui->buttonSetA_42,          &QPushButton::clicked,  this,   &MainWindow::setA_42);
-    connect(ui->buttonGetAddress,       &QPushButton::clicked,  this,   &MainWindow::getAddress);
-    connect(ui->buttonGetMode,          &QPushButton::clicked,  this,   &MainWindow::getMode);
-    connect(ui->buttonGetMaxValue,      &QPushButton::clicked,  this,   &MainWindow::getMaxValue);
-    connect(ui->buttonGetMaxValue_2,    &QPushButton::clicked,  this,   &MainWindow::getMaxValue_2);
-    connect(ui->buttonGetMovingAverage_1,&QPushButton::clicked, this,   &MainWindow::getMovingAverage_1);
-    connect(ui->buttonGetMovingAverage_2,&QPushButton::clicked, this,   &MainWindow::getMovingAverage_2);
-    connect(ui->buttonGetA_40,          &QPushButton::clicked,  this,   &MainWindow::getA_40);
-    connect(ui->buttonGetA_41,          &QPushButton::clicked,  this,   &MainWindow::getA_41);
-    connect(ui->buttonGetA_42,          &QPushButton::clicked,  this,   &MainWindow::getA_42);
-    connect(ui->buttonSetFixedCurrent,  &QPushButton::clicked,  this,   &MainWindow::setValueFixedCurrent);
-    connect(ui->buttonGetCurrent,       &QPushButton::clicked,  this,   &MainWindow::getCurrent);
-    connect(ui->buttonGetPressue,       &QPushButton::clicked,  this,   &MainWindow::getPressue);
-    connect(ui->buttonUpdateCom,        &QPushButton::clicked,  this,   &MainWindow::updateCom);
-    connect(ui->buttonFindCoef,         &QPushButton::clicked,  this,   &MainWindow::findCoef);
-    connect(ui->buttonClearCalibration, &QPushButton::clicked,  this,   &MainWindow::clearCalibrationData);
+    connect(serial,                     &QSerialPort::readyRead,this,   &HartTester::readData);             //slot recieve data from COM port
+    connect(timer,                      &QTimer::timeout,       this,   &HartTester::showTime);             //slot timer for sending loop request
+    connect(timerFindDevice,            &QTimer::timeout,       this,   &HartTester::sendFindRequest);      //slot timer for sending find request
+    connect(ui->buttonResetAddr,        &QPushButton::clicked,  this,   &HartTester::ResetAddressInit);     //slot button for reset combobox address
+    connect(ui->pushButton,             &QPushButton::clicked,  this,   &HartTester::connectCOM);           //slot button for connection COM port
+    connect(ui->buttonClose,            &QPushButton::clicked,  this,   &HartTester::closeCOM);             //slot button for closing COM port
+    connect(ui->buttonSend,             &QPushButton::clicked,  this,   &HartTester::sendRequest);          //slot button for closing COM port
+    connect(ui->buttonClear,            &QPushButton::clicked,  this,   &HartTester::clearText);            //slot button for clear developer TextEEdit
+    connect(ui->buttonTimerStart,       &QPushButton::clicked,  this,   &HartTester::startLoop);            //slot button start timer sending loop request
+    connect(ui->buttonTimerStop,        &QPushButton::clicked,  this,   &HartTester::stopLoop);             //slot button stop timer sending loop request
+    connect(ui->pushButton_7,           &QPushButton::clicked,  this,   &HartTester::create91Request);      //slot button create request drom data for request91
+    connect(ui->pushButton_10,          &QPushButton::clicked,  this,   &HartTester::stopLoopFunction3);    //slot button start timer for sending loop request for tab Function3
+    connect(ui->pushButton_11,          &QPushButton::clicked,  this,   &HartTester::clearTable);           //slot button clear table for tab Function 3
+    connect(ui->buttonFindDevice,       &QPushButton::clicked,  this,   &HartTester::findDevice);           //slot button start timer for sending find request
+    connect(ui->buttonFunction3Send,    &QPushButton::clicked,  this,   &HartTester::Function3Send);        //slot button for sending request for tab Function3
+    connect(ui->buttonFunction3Loop,    &QPushButton::clicked,  this,   &HartTester::startLoopFunction3);   //slot button start timer for sending loop request for tab Function3
+    connect(ui->buttonSpan,             &QPushButton::clicked,  this,   &HartTester::spanRequest);          //slot button for sending Span request for tab Calibration
+    connect(ui->buttonZero,             &QPushButton::clicked,  this,   &HartTester::zeroRequest);          //slot button for sending Zero request for tab Calibration
+    connect(ui->buttonZeroFirstVar,     &QPushButton::clicked,  this,   &HartTester::zeroFirstVarRequest);  //slot button for sending request zero first variable for tab Calibration
+    connect(ui->linePassword,           &QLineEdit::textEdited, this,   &HartTester::checkPassword);
+    connect(ui->buttonSetAddress,       &QPushButton::clicked,  this,   &HartTester::setAddress);
+    connect(ui->buttonSetMode,          &QPushButton::clicked,  this,   &HartTester::setMode);
+    connect(ui->buttonSetMaxValue,      &QPushButton::clicked,  this,   &HartTester::setMaxValue);
+    connect(ui->buttonSetMaxValue_2,    &QPushButton::clicked,  this,   &HartTester::setMaxValue_2);
+    connect(ui->buttonMovingAverage_1,  &QPushButton::clicked,  this,   &HartTester::setMovingAverage_1);
+    connect(ui->buttonMovingAverage_2,  &QPushButton::clicked,  this,   &HartTester::setMovingAverage_2);
+    connect(ui->buttonSetA_40,          &QPushButton::clicked,  this,   &HartTester::setA_40);
+    connect(ui->buttonSetA_41,          &QPushButton::clicked,  this,   &HartTester::setA_41);
+    connect(ui->buttonSetA_42,          &QPushButton::clicked,  this,   &HartTester::setA_42);
+    connect(ui->buttonGetAddress,       &QPushButton::clicked,  this,   &HartTester::getAddress);
+    connect(ui->buttonGetMode,          &QPushButton::clicked,  this,   &HartTester::getMode);
+    connect(ui->buttonGetMaxValue,      &QPushButton::clicked,  this,   &HartTester::getMaxValue);
+    connect(ui->buttonGetMaxValue_2,    &QPushButton::clicked,  this,   &HartTester::getMaxValue_2);
+    connect(ui->buttonGetMovingAverage_1,&QPushButton::clicked, this,   &HartTester::getMovingAverage_1);
+    connect(ui->buttonGetMovingAverage_2,&QPushButton::clicked, this,   &HartTester::getMovingAverage_2);
+    connect(ui->buttonGetA_40,          &QPushButton::clicked,  this,   &HartTester::getA_40);
+    connect(ui->buttonGetA_41,          &QPushButton::clicked,  this,   &HartTester::getA_41);
+    connect(ui->buttonGetA_42,          &QPushButton::clicked,  this,   &HartTester::getA_42);
+    connect(ui->buttonSetFixedCurrent,  &QPushButton::clicked,  this,   &HartTester::setValueFixedCurrent);
+    connect(ui->buttonGetCurrent,       &QPushButton::clicked,  this,   &HartTester::getCurrent);
+    connect(ui->buttonGetPressue,       &QPushButton::clicked,  this,   &HartTester::getPressue);
+    connect(ui->buttonUpdateCom,        &QPushButton::clicked,  this,   &HartTester::updateCom);
+    connect(ui->buttonFindCoef,         &QPushButton::clicked,  this,   &HartTester::findCoef);
+    connect(ui->buttonClearCalibration, &QPushButton::clicked,  this,   &HartTester::clearCalibrationData);
 }
-void MainWindow::downloadSettings()
+void HartTester::downloadSettings()
 {
     QSettings settings("STLab","HartTester");
     ui->tabWidget->setCurrentIndex      (settings.value("/Parameters/CurrentTab").toInt());
-    ui->comboBoxAddress->setCurrentText (settings.value("/Parameters/CurrentFunc").toString());
-    ui->comboBoxFunc->setCurrentIndex   (settings.value("/Parameters/CurrentIndex").toInt());
+    ui->comboBoxAddress->setCurrentIndex(settings.value("/Parameters/CurrentAddr").toInt());
+    ui->comboBoxFunc->setCurrentIndex   (settings.value("/Parameters/CurrentFunc").toInt());
     ui->spinBox->setValue               (settings.value("/Parameters/CurrentPreamble").toInt());
     if(                                  settings.value("/Parameters/CurrentFrame").toBool())
     {
@@ -303,11 +322,12 @@ void MainWindow::downloadSettings()
     ui->comboBoxAddressFunc3_3->setCurrentIndex(settings.value("/Parameters/AddrFunc3_3").toInt());
     ui->comboBoxAddressFunc3_4->setCurrentIndex(settings.value("/Parameters/AddrFunc3_4").toInt());
     ui->comboBoxAddressFunc3_5->setCurrentIndex(settings.value("/Parameters/AddrFunc3_5").toInt());
+    ui->spinBox_2->setValue(            settings.value("/Parameters/Frequence").toInt());
 }
-void MainWindow::saveSettings()
+void HartTester::saveSettings()
 {
     QSettings settings("STLab","HartTester");
-    settings.setValue("/Parameters/CurrentAddress", ui->comboBoxAddress->currentText());
+    settings.setValue("/Parameters/CurrentAddr",    ui->comboBoxAddress->currentIndex());
     settings.setValue("/Parameters/CurrentFunc",    ui->comboBoxFunc->currentIndex());
     settings.setValue("/Parameters/CurrentPreamble",ui->spinBox->text());
     settings.setValue("/Parameters/CurrentFrame",   ui->checkLongFrame->checkState());
@@ -320,9 +340,10 @@ void MainWindow::saveSettings()
     settings.setValue("/Parameters/AddrFunc3_3",    ui->comboBoxAddressFunc3_3->currentIndex());
     settings.setValue("/Parameters/AddrFunc3_4",    ui->comboBoxAddressFunc3_4->currentIndex());
     settings.setValue("/Parameters/AddrFunc3_5",    ui->comboBoxAddressFunc3_5->currentIndex());
+    settings.setValue("/Parameters/Frequence",      ui->spinBox_2->value());
     //settings.setValue("/Parameters/SetA41",         ui->lineEditSetA_41->text().toFloat());
 }
-void MainWindow::ResetAddressInit()
+void HartTester::ResetAddressInit()
 {
     comboBoxAddress = ui->comboBoxAddress;
     ResetAddress();
@@ -337,7 +358,7 @@ void MainWindow::ResetAddressInit()
     comboBoxAddress = ui->comboBoxAddressFunc3_5;
     ResetAddress();
 }
-void MainWindow::createRequestOut(bool tr = false)
+void HartTester::createRequestOut(bool tr = false)
 {
     request a;
     a.setLongFrame(ui->checkLongFrame->checkState());
@@ -368,7 +389,7 @@ void MainWindow::createRequestOut(bool tr = false)
     }
     ui->lineRequest->setText(req);
 }
-void MainWindow::getRequestAddr(bool b)
+void HartTester::getRequestAddr(bool b)
 {
     if(!b)
     {
@@ -392,7 +413,7 @@ void MainWindow::getRequestAddr(bool b)
         createRequestOut();
     }
 }
-void MainWindow::changedInByteExpected(){
+void HartTester::changedInByteExpected(){
     switch (NumFunc) {
         case 0:
             inBytesExpected = int(ui->spinBox->value())+19+2*int(ui->checkLongFrame->checkState());
@@ -417,7 +438,7 @@ void MainWindow::changedInByteExpected(){
         break;
     }
 }
-void MainWindow::showHideTableRow(QString r, bool t){
+void HartTester::showHideTableRow(QString r, bool t){
     int numberRow = 0;
     numberRow = model->rowCount();
     if(!t && numberRow != 0)
@@ -446,21 +467,27 @@ void MainWindow::showHideTableRow(QString r, bool t){
         }
     }
 }
-void MainWindow::updateCom()
+void HartTester::updateCom()
 {
     ui->comboBox->clear();
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
                 ui->comboBox->addItem(info.portName());
+//    QObject *g= sender();
+//    if(ui->checkLongFrame->checkState())
+//    {
+//        ui->lineEditStatus->setText(g->metaObject()->className());
+//    }
+
 }
-void MainWindow::aboutHartTester()
+void HartTester::aboutHartTester()
 {
     QMessageBox::about(this, "О программе", "HartTester Program \nVer. 0.20181101a");
 }
-void MainWindow::aboutQt()
+void HartTester::aboutQt()
 {
     QMessageBox::aboutQt(this);
 }
-void MainWindow::connectCOM()//connect
+void HartTester::connectCOM()//connect
 {
     serial->open(QSerialPort::ReadWrite);
     if (serial->portName() != ui->comboBox->currentText())
@@ -485,7 +512,7 @@ void MainWindow::connectCOM()//connect
     }
     //serial->setFlowControl(QSerialPort::SoftwareControl);
 }
-void MainWindow::closeCOM()//close
+void HartTester::closeCOM()//close
 {
     if(serial->isOpen()){
         ui->pushButton->setEnabled(true);
@@ -494,7 +521,7 @@ void MainWindow::closeCOM()//close
     timer->stop();
     serial->close();
 }
-void MainWindow::sendRequest()//send
+void HartTester::sendRequest()//send
 {
 
     //QThread::msleep(270);
@@ -542,7 +569,7 @@ void MainWindow::sendRequest()//send
         ui->pushButton_7->setEnabled(true);
     }
 }
-void MainWindow::readData()//read data
+void HartTester::readData()//read data
 {
 
     QStandardItem *item;
@@ -804,17 +831,17 @@ void MainWindow::readData()//read data
     sb.movePosition(QTextCursor::End);
     ui->textEdit->setTextCursor(sb);
 }
-void MainWindow::clearText()//clear
+void HartTester::clearText()//clear
 {
     ui->textEdit->clear();
 }
-void MainWindow::showTime(){
+void HartTester::showTime(){
     if(!(serial->isOpen())){
         ui->textEdit->setText("Not Open");
     }
-    MainWindow::sendRequest();
+    HartTester::sendRequest();
 }
-void MainWindow::startLoop()//timerstart
+void HartTester::startLoop()//timerstart
 {
     timer->start(static_cast<int>(ui->doubleSpinBoxTimerSend->value()*1000));
     if(ui->comboBoxFunc->currentData().toInt() == 91){
@@ -823,11 +850,11 @@ void MainWindow::startLoop()//timerstart
         ui->pushButton_7->setEnabled(true);
     }
 }
-void MainWindow::stopLoop()//timer stop
+void HartTester::stopLoop()//timer stop
 {
     timer->stop();
 }
-void MainWindow::on_comboBoxFunc_currentIndexChanged()//отклик на изменение функции
+void HartTester::on_comboBoxFunc_currentIndexChanged()//отклик на изменение функции
 {
     NumFunc = ui->comboBoxFunc->currentData().toInt();
     switch (NumFunc) {
@@ -896,7 +923,7 @@ void MainWindow::on_comboBoxFunc_currentIndexChanged()//отклик на изм
     getRequestAddr(ui->checkLongFrame->checkState());
 
 }
-void MainWindow::on_spinBox_valueChanged()//изменение длины преамбулы
+void HartTester::on_spinBox_valueChanged()//изменение длины преамбулы
 {
 
     data91 = new unsigned char[int(ui->spinData91->value())+1];
@@ -904,13 +931,13 @@ void MainWindow::on_spinBox_valueChanged()//изменение длины пре
     //getRequestAddr();
     createRequestOut();
 }
-void MainWindow::on_checkLongFrame_stateChanged()//отклик на длину фрейма
+void HartTester::on_checkLongFrame_stateChanged()//отклик на длину фрейма
 {
     data91 = new unsigned char[int(ui->spinData91->value())+1];
     changedInByteExpected();
     getRequestAddr(ui->checkLongFrame->checkState());
 }
-void MainWindow::on_checkEnTextBrows_stateChanged(int arg1)//отклsючение текстовго редктора
+void HartTester::on_checkEnTextBrows_stateChanged(int arg1)//отклsючение текстовго редктора
 {
     if(arg1==0){
         ui->textEdit->setEnabled(false);
@@ -920,7 +947,7 @@ void MainWindow::on_checkEnTextBrows_stateChanged(int arg1)//отклsючени
         ui->buttonClear->setEnabled(true);
     }
 }
-void MainWindow::on_lineEdit_2_textChanged(const QString &arg1)//ввод дданных
+void HartTester::on_lineEdit_2_textChanged(const QString &arg1)//ввод дданных
 {
     if(arg1.length() == 5){
         QByteArray text =QByteArray(arg1.toLocal8Bit());
@@ -946,7 +973,7 @@ void MainWindow::on_lineEdit_2_textChanged(const QString &arg1)//ввод дда
         createRequestOut();
     }
 }
-void MainWindow::on_spinData91_valueChanged(int arg1)//разрешение ввода данных
+void HartTester::on_spinData91_valueChanged(int arg1)//разрешение ввода данных
 {
     union{
         float f;
@@ -990,7 +1017,7 @@ void MainWindow::on_spinData91_valueChanged(int arg1)//разрешение вв
         lineFloat->setText(QString("%1").number(transf.f));
     }
 }
-void MainWindow::on_lineFloat_1_textChanged()
+void HartTester::on_lineFloat_1_textChanged()
 {
     float re = ui->lineFloat_1->text().toFloat();
     union{
@@ -1005,7 +1032,7 @@ void MainWindow::on_lineFloat_1_textChanged()
     ui->lineFloat_1_Byte_3->setText(QByteArray(1,transf.ie[1]).toHex());
     ui->lineFloat_1_Byte_4->setText(QByteArray(1,transf.ie[0]).toHex());
 }
-void MainWindow::on_lineFloat_2_textChanged()
+void HartTester::on_lineFloat_2_textChanged()
 {
     float re = ui->lineFloat_2->text().toFloat();
     union{
@@ -1020,7 +1047,7 @@ void MainWindow::on_lineFloat_2_textChanged()
     ui->lineFloat_2_Byte_3->setText(QByteArray(1,transf.ie[1]).toHex());
     ui->lineFloat_2_Byte_4->setText(QByteArray(1,transf.ie[0]).toHex());
 }
-void MainWindow::on_lineFloat_3_textChanged()
+void HartTester::on_lineFloat_3_textChanged()
 {
     float re = ui->lineFloat_3->text().toFloat();
     union{
@@ -1034,7 +1061,7 @@ void MainWindow::on_lineFloat_3_textChanged()
     ui->lineFloat_3_Byte_3->setText(QByteArray(1,transf.ie[1]).toHex());
     ui->lineFloat_3_Byte_4->setText(QByteArray(1,transf.ie[0]).toHex());
 }
-void MainWindow::on_lineFloat_4_textChanged()
+void HartTester::on_lineFloat_4_textChanged()
 {
     float re = ui->lineFloat_4->text().toFloat();
     union{
@@ -1049,7 +1076,7 @@ void MainWindow::on_lineFloat_4_textChanged()
     ui->lineFloat_4_Byte_3->setText(QByteArray(1,transf.ie[1]).toHex());
     ui->lineFloat_4_Byte_4->setText(QByteArray(1,transf.ie[0]).toHex());
 }
-void MainWindow::on_lineFloat_5_textChanged()
+void HartTester::on_lineFloat_5_textChanged()
 {
     float re = ui->lineFloat_5->text().toFloat();
     union{
@@ -1064,7 +1091,7 @@ void MainWindow::on_lineFloat_5_textChanged()
     ui->lineFloat_5_Byte_3->setText(QByteArray(1,transf.ie[1]).toHex());
     ui->lineFloat_5_Byte_4->setText(QByteArray(1,transf.ie[0]).toHex());
 }
-void MainWindow::on_lineFloat_6_textChanged()
+void HartTester::on_lineFloat_6_textChanged()
 {
     float re = ui->lineFloat_6->text().toFloat();
     union{
@@ -1079,7 +1106,7 @@ void MainWindow::on_lineFloat_6_textChanged()
     ui->lineFloat_6_Byte_3->setText(QByteArray(1,transf.ie[1]).toHex());
     ui->lineFloat_6_Byte_4->setText(QByteArray(1,transf.ie[0]).toHex());
 }
-void MainWindow::create91Request()//создание 91 запроса
+void HartTester::create91Request()//создание 91 запроса
 {
     ui->buttonSend->setEnabled(true);
     ui->buttonTimerStart->setEnabled(true);
@@ -1108,7 +1135,7 @@ void MainWindow::create91Request()//создание 91 запроса
     createRequestOut();
     //ui->pushButton_7->setEnabled(false);
 }
-void MainWindow::requestFunction3(QComboBox *f)
+void HartTester::requestFunction3(QComboBox *f)
 {
     unsigned char *currentAddr = new unsigned char [5];
     if(!ui->checkLongFrame->checkState())
@@ -1147,9 +1174,9 @@ void MainWindow::requestFunction3(QComboBox *f)
     sendRequest();
     countTimerFinc3 = 0;
 }
-void MainWindow::Function3Send()//send Function3
+void HartTester::Function3Send()//send Function3
 {
-    connect(timerFunction3,&QTimer::timeout,this,&MainWindow::sendTimerRequest);
+    connect(timerFunction3,&QTimer::timeout,this,&HartTester::sendTimerRequest);
     //timerSendRequest = 150;
     if(ui->checkDevice_1->checkState()) requset1IsSend = true;
     if(ui->checkDevice_2->checkState()) requset2IsSend = true;
@@ -1164,7 +1191,7 @@ void MainWindow::Function3Send()//send Function3
        timerFunction3->start(timerSendRequest);
     }
 }
-void MainWindow::sendTimerRequest()
+void HartTester::sendTimerRequest()
 {
     if(countTimerFinc3 >(3000/timerSendRequest))//timeout
     {
@@ -1206,7 +1233,7 @@ void MainWindow::sendTimerRequest()
     {
        allRequestIsSend = true;
        countTimerFinc3 = 0;
-       disconnect(timerFunction3,&QTimer::timeout,this,&MainWindow::sendTimerRequest);
+       disconnect(timerFunction3,&QTimer::timeout,this,&HartTester::sendTimerRequest);
        timerFunction3->stop();
        qDebug()<<"timerstop";
     }
@@ -1228,7 +1255,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::sendRequest();
+        HartTester::sendRequest();
         requset1IsSend = false;
         fsend = true;
     }
@@ -1245,7 +1272,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::sendRequest();
+        HartTester::sendRequest();
         requset2IsSend = false;
         fsend = true;
     }
@@ -1262,7 +1289,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::sendRequest();
+        HartTester::sendRequest();
         requset3IsSend = false;
         fsend = true;
     }
@@ -1279,7 +1306,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::sendRequest();
+        HartTester::sendRequest();
         requset4IsSend = false;
         fsend = true;
     }
@@ -1296,7 +1323,7 @@ void MainWindow::sendTimerRequest()
                 createRequestOut();
             }
         }
-        MainWindow::sendRequest();
+        HartTester::sendRequest();
         requset5IsSend = false;
         fsend = true;
     }
@@ -1308,30 +1335,30 @@ void MainWindow::sendTimerRequest()
         requestIsSend = 0;
     }*/
 }
-void MainWindow::sendTimerRequestLoop()
+void HartTester::sendTimerRequestLoop()
 {
     if(allRequestIsSend)
     {
         Function3Send();
     }
 }
-void MainWindow::startLoopFunction3()
+void HartTester::startLoopFunction3()
 {    
-    connect(timerFunction3Loop,&QTimer::timeout,this,&MainWindow::sendTimerRequestLoop);
+    connect(timerFunction3Loop,&QTimer::timeout,this,&HartTester::sendTimerRequestLoop);
     Function3Send();
     timerFunction3Loop->start(timerSendRequest);
 }
-void MainWindow::stopLoopFunction3()
+void HartTester::stopLoopFunction3()
 {
-    disconnect(timerFunction3Loop,&QTimer::timeout,this,&MainWindow::sendTimerRequestLoop);
+    disconnect(timerFunction3Loop,&QTimer::timeout,this,&HartTester::sendTimerRequestLoop);
     timerFunction3Loop->stop();
 }
-void MainWindow::clearTable()
+void HartTester::clearTable()
 {
     model->clear();
     numberRow = 0;
 }
-void MainWindow::on_tabWidget_currentChanged(int index)
+void HartTester::on_tabWidget_currentChanged(int index)
 {
     changedInByteExpected();
     switch (index) {
@@ -1345,36 +1372,36 @@ void MainWindow::on_tabWidget_currentChanged(int index)
             ui->comboBoxFunc->setCurrentIndex(1); break;
     }
 }
-void MainWindow::on_lineAddrShort_textChanged()
+void HartTester::on_lineAddrShort_textChanged()
 {
     getRequestAddr(ui->checkLongFrame->checkState());
 }
-void MainWindow::on_lineAddrLong_textChanged()
+void HartTester::on_lineAddrLong_textChanged()
 {
     getRequestAddr(ui->checkLongFrame->checkState());
 }
 
-void MainWindow::on_checkDevice_1_stateChanged()
+void HartTester::on_checkDevice_1_stateChanged()
 {
     showHideTableRow(ui->comboBoxAddressFunc3_1->currentText(), ui->checkDevice_1->checkState());
 }
-void MainWindow::on_checkDevice_2_stateChanged()
+void HartTester::on_checkDevice_2_stateChanged()
 {
     showHideTableRow(ui->comboBoxAddressFunc3_2->currentText(), ui->checkDevice_2->checkState());
 }
-void MainWindow::on_checkDevice_3_stateChanged()
+void HartTester::on_checkDevice_3_stateChanged()
 {
     showHideTableRow(ui->comboBoxAddressFunc3_3->currentText(), ui->checkDevice_3->checkState());
 }
-void MainWindow::on_checkDevice_4_stateChanged()
+void HartTester::on_checkDevice_4_stateChanged()
 {
     showHideTableRow(ui->comboBoxAddressFunc3_4->currentText(), ui->checkDevice_4->checkState());
 }
-void MainWindow::on_checkDevice_5_stateChanged()
+void HartTester::on_checkDevice_5_stateChanged()
 {
     showHideTableRow(ui->comboBoxAddressFunc3_5->currentText(), ui->checkDevice_5->checkState());
 }
-void MainWindow::findDevice()//запуск таймера на поиск
+void HartTester::findDevice()//запуск таймера на поиск
 {
 
     ui->comboBoxFunc->setCurrentIndex(0);
@@ -1412,7 +1439,7 @@ void MainWindow::findDevice()//запуск таймера на поиск
     sendRequest();
     //inBytesExpected = int(ui->spinBox->value())+19+2*int(ui->checkLongFrame->checkState());
 }
-void MainWindow::sendFindRequest()//создание запроса на поиск
+void HartTester::sendFindRequest()//создание запроса на поиск
 {
     ui->comboBoxFunc->setCurrentIndex(0);
     if(answerIsGet)
@@ -1459,7 +1486,7 @@ void MainWindow::sendFindRequest()//создание запроса на пои�
         sendRequest();
     }
 }
-void MainWindow::on_comboBoxAddress_highlighted()
+void HartTester::on_comboBoxAddress_highlighted()
 {
         getRequestAddr(ui->checkLongFrame->checkState());
         ui->comboBoxAddressFunc3_1->setCurrentIndex(ui->comboBoxAddress->currentIndex());
@@ -1469,7 +1496,7 @@ void MainWindow::on_comboBoxAddress_highlighted()
         ui->comboBoxAddressFunc3_5->setCurrentIndex(ui->comboBoxAddress->currentIndex());
         ui->comboBoxAddressFunc3_5->setCurrentIndex(ui->comboBoxAddress->currentIndex());
 }
-void MainWindow::on_comboBoxAddress_currentIndexChanged()
+void HartTester::on_comboBoxAddress_currentIndexChanged()
 {
         getRequestAddr(ui->checkLongFrame->checkState());
         ui->comboBoxAddressFunc3_1->setCurrentIndex(ui->comboBoxAddress->currentIndex());
@@ -1480,14 +1507,14 @@ void MainWindow::on_comboBoxAddress_currentIndexChanged()
         ui->comboBoxAddressFunc3_5->setCurrentIndex(ui->comboBoxAddress->currentIndex());
 }
 
-void MainWindow::spanRequest()
+void HartTester::spanRequest()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationSpan);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateCalibrationSpan);
     request a;
     bool longFrame = ui->checkLongFrame->checkState();
     getRequestAddr(longFrame);
@@ -1507,34 +1534,34 @@ void MainWindow::spanRequest()
     timerCalibration->start(50);
     sendRequest();
 }
-void MainWindow::indicateCalibrationSpan()
+void HartTester::indicateCalibrationSpan()
 {
 
     if(answerIsGet)
     {
         ui->label_3->setStyleSheet(styleSheetCalibrationOk);
         countIndicateCalibration = 0;
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationSpan);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateCalibrationSpan);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->label_3->setStyleSheet(styleSheetCalibrationDefault);        
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationSpan);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateCalibrationSpan);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
 
-void MainWindow::zeroRequest()
+void HartTester::zeroRequest()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZero);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateCalibrationZero);
     request a;
     bool longFrame = ui->checkLongFrame->checkState();
     getRequestAddr(longFrame);
@@ -1554,34 +1581,34 @@ void MainWindow::zeroRequest()
     timerCalibration->start(50);
     sendRequest();
 }
-void MainWindow::indicateCalibrationZero()
+void HartTester::indicateCalibrationZero()
 {
 
     if(answerIsGet)
     {
         ui->label_4->setStyleSheet(styleSheetCalibrationOk);
         countIndicateCalibration = 0;
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZero);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateCalibrationZero);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->label_4->setStyleSheet(styleSheetCalibrationDefault);        
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZero);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateCalibrationZero);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
 
-void MainWindow::zeroFirstVarRequest()
+void HartTester::zeroFirstVarRequest()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZeroFirstVar);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateCalibrationZeroFirstVar);
     request a;
     bool longFrame = ui->checkLongFrame->checkState();
     getRequestAddr(longFrame);
@@ -1601,27 +1628,27 @@ void MainWindow::zeroFirstVarRequest()
     timerCalibration->start(50);
     sendRequest();
 }
-void MainWindow::indicateCalibrationZeroFirstVar()
+void HartTester::indicateCalibrationZeroFirstVar()
 {
 
     if(answerIsGet)
     {
         ui->label_5->setStyleSheet(styleSheetCalibrationOk);
         countIndicateCalibration = 0;
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZeroFirstVar);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateCalibrationZeroFirstVar);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->label_5->setStyleSheet(styleSheetCalibrationBad);        
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateCalibrationZeroFirstVar);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateCalibrationZeroFirstVar);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
 
-void MainWindow::checkPassword()
+void HartTester::checkPassword()
 {
     QString gh = ui->linePassword->text();
     if (gh =="1234")
@@ -1635,7 +1662,7 @@ void MainWindow::checkPassword()
     }
 }
 
-void MainWindow::calibrationFunctions(unsigned char *data,int numberData)
+void HartTester::calibrationFunctions(unsigned char *data,int numberData)
 {
     request a;
     bool longFrame = true;
@@ -1655,7 +1682,7 @@ void MainWindow::calibrationFunctions(unsigned char *data,int numberData)
     inBytesExpected = int(ui->spinBox->value())+13;
     sendRequest();
 }
-void MainWindow::calibrationFunctionsGet(unsigned char *data1,int numberData1)
+void HartTester::calibrationFunctionsGet(unsigned char *data1,int numberData1)
 {
     request a;
     bool longFrame = false;
@@ -1676,7 +1703,7 @@ void MainWindow::calibrationFunctionsGet(unsigned char *data1,int numberData1)
     sendRequest();
 }
 
-void MainWindow::setAddress()
+void HartTester::setAddress()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
@@ -1684,7 +1711,7 @@ void MainWindow::setAddress()
         return void();
     }
     ui->comboBoxSetAddress->setStyleSheet(styleSheetCalibrationComboBoxBad);
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetAddress);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetAddress);
     unsigned char *dataChangeAddress = new unsigned char [2];
     QString textAddr = ui->comboBoxSetAddress->currentText();
     QByteArray text =QByteArray(textAddr.toLocal8Bit());
@@ -1694,7 +1721,7 @@ void MainWindow::setAddress()
     timerCalibration->start(50);
     calibrationFunctions(dataChangeAddress,2);
 }
-void MainWindow::setMode()
+void HartTester::setMode()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
@@ -1702,7 +1729,7 @@ void MainWindow::setMode()
         return void();
     }
     ui->comboBoxSetMode->setStyleSheet(styleSheetCalibrationComboBoxBad);
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMode);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMode);
     unsigned char *dataChangeAddress = new unsigned char [2];
     int textMode = ui->comboBoxSetMode->currentData().toInt();
     dataChangeAddress[0] = 0x01;
@@ -1710,7 +1737,7 @@ void MainWindow::setMode()
     timerCalibration->start(50);
     calibrationFunctions(dataChangeAddress,2);
 }
-void MainWindow::setMaxValue()
+void HartTester::setMaxValue()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
@@ -1718,7 +1745,7 @@ void MainWindow::setMaxValue()
         return void();
     }
     ui->lineEditSetMaxValue->setStyleSheet(styleSheetCalibrationLineEditBad);
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMaxValue);
     float re = ui->lineEditSetMaxValue->text().toFloat();
     union{
         float f;
@@ -1735,7 +1762,7 @@ void MainWindow::setMaxValue()
     timerCalibration->start(50);
     calibrationFunctions(maxValue,5);
 }
-void MainWindow::setMaxValue_2()
+void HartTester::setMaxValue_2()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
@@ -1743,7 +1770,7 @@ void MainWindow::setMaxValue_2()
         return void();
     }
     ui->lineEditSetMaxValue_2->setStyleSheet(styleSheetCalibrationLineEditBad);
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue_2);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMaxValue_2);
     float re = ui->lineEditSetMaxValue_2->text().toFloat();
     union{
         float f;
@@ -1760,7 +1787,7 @@ void MainWindow::setMaxValue_2()
     timerCalibration->start(50);
     calibrationFunctions(maxValue,5);
 }
-void MainWindow::setMovingAverage_1()
+void HartTester::setMovingAverage_1()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
@@ -1768,14 +1795,14 @@ void MainWindow::setMovingAverage_1()
         return void();
     }
     ui->spinBoxMovingAverage_1->setStyleSheet(styleSheetCalibrationSpinBoxBad);
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_1);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMovingAverage_1);
     unsigned char *dataChangeAddress = new unsigned char [2];
     dataChangeAddress[0] = 0x0b;
     dataChangeAddress[1] = (unsigned char)ui->spinBoxMovingAverage_1->value();
     timerCalibration->start(50);
     calibrationFunctions(dataChangeAddress,2);
 }
-void MainWindow::setMovingAverage_2()
+void HartTester::setMovingAverage_2()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
@@ -1783,14 +1810,14 @@ void MainWindow::setMovingAverage_2()
         return void();
     }
     ui->spinBoxMovingAverage_2->setStyleSheet(styleSheetCalibrationSpinBoxBad);
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_2);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMovingAverage_2);
     unsigned char *dataChangeAddress = new unsigned char [2];
     dataChangeAddress[0] = 0x0d;
     dataChangeAddress[1] = (unsigned char)ui->spinBoxMovingAverage_2->value();
     timerCalibration->start(50);
     calibrationFunctions(dataChangeAddress,2);
 }
-void MainWindow::setA_40()
+void HartTester::setA_40()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
@@ -1798,7 +1825,7 @@ void MainWindow::setA_40()
         return void();
     }
     ui->lineEditSetA_40->setStyleSheet(styleSheetCalibrationLineEditBad);
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_40);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetA_40);
     float re = ui->lineEditSetA_40->text().toFloat();
     union{
         float f;
@@ -1815,7 +1842,7 @@ void MainWindow::setA_40()
     timerCalibration->start(50);
     calibrationFunctions(maxValue,5);
 }
-void MainWindow::setA_41()
+void HartTester::setA_41()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
@@ -1823,7 +1850,7 @@ void MainWindow::setA_41()
         return void();
     }
     ui->lineEditSetA_41->setStyleSheet(styleSheetCalibrationLineEditBad);
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_41);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetA_41);
     float re = ui->lineEditSetA_41->text().toFloat();
     union{
         float f;
@@ -1840,7 +1867,7 @@ void MainWindow::setA_41()
     timerCalibration->start(50);
     calibrationFunctions(maxValue,5);
 }
-void MainWindow::setA_42()
+void HartTester::setA_42()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
@@ -1848,7 +1875,7 @@ void MainWindow::setA_42()
         return void();
     }
     ui->lineEditSetA_42->setStyleSheet(styleSheetCalibrationLineEditBad);
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_42);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetA_42);
     float re = ui->lineEditSetA_42->text().toFloat();
     union{
         float f;
@@ -1866,154 +1893,154 @@ void MainWindow::setA_42()
     calibrationFunctions(maxValue,5);
 }
 
-void MainWindow::getAddress()
+void HartTester::getAddress()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetAddress);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetAddress);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x03;
     data[1] = 0x01;
     timerCalibration->start(50);
     calibrationFunctionsGet(data,2);
 }
-void MainWindow::getMode()
+void HartTester::getMode()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMode);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMode);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x01;
     data[1] = 0x01;
     timerCalibration->start(50);
     calibrationFunctionsGet(data,2);
 }
-void MainWindow::getMaxValue()
+void HartTester::getMaxValue()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMaxValue);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMaxValue);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x1e;
     data[1] = 0x04;
     timerCalibration->start(50);
     calibrationFunctionsGet(data,5);
 }
-void MainWindow::getMaxValue_2()
+void HartTester::getMaxValue_2()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMaxValue_2);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMaxValue_2);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x22;
     data[1] = 0x04;
     timerCalibration->start(50);
     calibrationFunctionsGet(data,5);
 }
-void MainWindow::getMovingAverage_1()
+void HartTester::getMovingAverage_1()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMovingAverage_1);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMovingAverage_1);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x0b;
     data[1] = 0x01;
     timerCalibration->start(50);
     calibrationFunctionsGet(data,2);
 }
-void MainWindow::getMovingAverage_2()
+void HartTester::getMovingAverage_2()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMovingAverage_2);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMovingAverage_2);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x0d;
     data[1] = 0x01;
     timerCalibration->start(50);
     calibrationFunctionsGet(data,2);
 }
-void MainWindow::getA_40()
+void HartTester::getA_40()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetA_40);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetA_40);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x4e;
     data[1] = 0x04;
     timerCalibration->start(50);
     calibrationFunctionsGet(data,5);
 }
-void MainWindow::getA_41()
+void HartTester::getA_41()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetA_41);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetA_41);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x52;
     data[1] = 0x04;
     timerCalibration->start(50);
     calibrationFunctionsGet(data,5);
 }
-void MainWindow::getA_42()
+void HartTester::getA_42()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetA_42);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetA_42);
     unsigned char *data = new unsigned char [2];
     data[0] = 0x56;
     data[1] = 0x04;
     timerCalibration->start(50);
     calibrationFunctionsGet(data,5);
 }
-void MainWindow::getPressue()
+void HartTester::getPressue()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetPressue);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetPressue);
     unsigned char *data = new unsigned char [2];
     data[0] = 0xcc;
     data[1] = 0x04;
     timerCalibration->start(50);
     calibrationFunctionsGet(data,5);
 }
-void MainWindow::getCurrent()
+void HartTester::getCurrent()
 {
     if(!serial->isOpen()){
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
         ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
         return void();
     }
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetCurrent);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetCurrent);
     unsigned char *data = new unsigned char [2];
     data[0] = 0xc8;
     data[1] = 0x04;
@@ -2021,170 +2048,170 @@ void MainWindow::getCurrent()
     calibrationFunctionsGet(data,5);
 }
 
-void MainWindow::indicateSetAddress()
+void HartTester::indicateSetAddress()
 {
     if(answerIsGet)
     {
         ui->comboBoxSetAddress->setStyleSheet(styleSheetCalibrationComboBoxGood);
         countIndicateCalibration = 0;
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetAddress);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetAddress);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->comboBoxSetAddress->setStyleSheet(styleSheetCalibrationComboBoxDefault);
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetAddress);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetAddress);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateSetMode()
+void HartTester::indicateSetMode()
 {
     if(answerIsGet)
     {
         ui->comboBoxSetMode->setStyleSheet(styleSheetCalibrationComboBoxGood);
         countIndicateCalibration = 0;
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMode);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMode);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->comboBoxSetMode->setStyleSheet(styleSheetCalibrationComboBoxDefault);
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMode);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMode);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateSetMaxValue()
+void HartTester::indicateSetMaxValue()
 {
     if(answerIsGet)
     {
         ui->lineEditSetMaxValue->setStyleSheet(styleSheetCalibrationLineEditGood);
         countIndicateCalibration = 0;
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMaxValue);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditSetMaxValue->setStyleSheet(styleSheetCalibrationLineEditDefault);
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMaxValue);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateSetMaxValue_2()
+void HartTester::indicateSetMaxValue_2()
 {
     if(answerIsGet)
     {
         ui->lineEditSetMaxValue_2->setStyleSheet(styleSheetCalibrationLineEditGood);
         countIndicateCalibration = 0;
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue_2);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMaxValue_2);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditSetMaxValue_2->setStyleSheet(styleSheetCalibrationLineEditDefault);
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMaxValue_2);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMaxValue_2);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateSetMovingAverage_1()
+void HartTester::indicateSetMovingAverage_1()
 {
     if(answerIsGet)
     {
         ui->spinBoxMovingAverage_1->setStyleSheet(styleSheetCalibrationSpinBoxGood);
         countIndicateCalibration = 0;
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_1);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMovingAverage_1);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->spinBoxMovingAverage_1->setStyleSheet(styleSheetCalibrationSpinBoxDefault);
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_1);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMovingAverage_1);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateSetMovingAverage_2()
+void HartTester::indicateSetMovingAverage_2()
 {
     if(answerIsGet)
     {
         ui->spinBoxMovingAverage_2->setStyleSheet(styleSheetCalibrationSpinBoxGood);
         countIndicateCalibration = 0;
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_2);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMovingAverage_2);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->spinBoxMovingAverage_2->setStyleSheet(styleSheetCalibrationSpinBoxDefault);
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetMovingAverage_2);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetMovingAverage_2);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateSetA_40()
+void HartTester::indicateSetA_40()
 {
     if(answerIsGet)
     {
         ui->lineEditSetA_40->setStyleSheet(styleSheetCalibrationLineEditGood);
         countIndicateCalibration = 0;
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_40);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetA_40);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditSetA_40->setStyleSheet(styleSheetCalibrationLineEditDefault);
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_40);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetA_40);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateSetA_41()
+void HartTester::indicateSetA_41()
 {
     if(answerIsGet)
     {
         ui->lineEditSetA_41->setStyleSheet(styleSheetCalibrationLineEditGood);
         countIndicateCalibration = 0;
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_41);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetA_41);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditSetA_41->setStyleSheet(styleSheetCalibrationLineEditDefault);
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_41);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetA_41);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateSetA_42()
+void HartTester::indicateSetA_42()
 {
     if(answerIsGet)
     {
         ui->lineEditSetA_42->setStyleSheet(styleSheetCalibrationLineEditGood);
         countIndicateCalibration = 0;
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_42);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetA_42);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditSetA_42->setStyleSheet(styleSheetCalibrationLineEditDefault);
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetA_42);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetA_42);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
 
-void MainWindow::indicateGetAddress()
+void HartTester::indicateGetAddress()
 {
     if(answerIsGet)
     {
@@ -2197,19 +2224,19 @@ void MainWindow::indicateGetAddress()
         char f =zData[0];
         QByteArray outText = QByteArray(1,f).toHex();
         ui->lineEditGetAddress->setText(outText);
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetAddress);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetAddress);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditGetAddress->setText(QString("Bad Crc"));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetAddress);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetAddress);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateGetMode()
+void HartTester::indicateGetMode()
 {
     if(answerIsGet)
     {
@@ -2228,19 +2255,19 @@ void MainWindow::indicateGetMode()
         {
             ui->lineEditGetMode->setText("RS-485");
         }
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMode);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMode);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditGetMode->setText(QString("Bad Crc"));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMode);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMode);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateGetMaxValue()
+void HartTester::indicateGetMaxValue()
 {
     if(answerIsGet)
     {
@@ -2260,7 +2287,7 @@ void MainWindow::indicateGetMaxValue()
         transf.ie[2] = zData[1];
         transf.ie[3] = zData[0];
         ui->lineEditMaxValueGet->setText(QString().number(transf.f));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMaxValue);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMaxValue);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
@@ -2268,12 +2295,12 @@ void MainWindow::indicateGetMaxValue()
         countIndicateCalibration = 0;
 
         ui->lineEditMaxValueGet->setText(QString("Bad Crc"));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMaxValue);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMaxValue);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateGetMaxValue_2()
+void HartTester::indicateGetMaxValue_2()
 {
     if(answerIsGet)
     {
@@ -2293,7 +2320,7 @@ void MainWindow::indicateGetMaxValue_2()
         transf.ie[2] = zData[1];
         transf.ie[3] = zData[0];
         ui->lineEditMaxValueGet_2->setText(QString().number(transf.f));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMaxValue_2);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMaxValue_2);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
@@ -2301,12 +2328,12 @@ void MainWindow::indicateGetMaxValue_2()
         countIndicateCalibration = 0;
 
         ui->lineEditMaxValueGet_2->setText(QString("Bad Crc"));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMaxValue_2);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMaxValue_2);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateGetMovingAverage_1()
+void HartTester::indicateGetMovingAverage_1()
 {
     if(answerIsGet)
     {
@@ -2318,19 +2345,19 @@ void MainWindow::indicateGetMovingAverage_1()
         zData = b.getData();
         int f =zData[0];
         ui->lineEditGetMovingAverage_1->setText(QString().number(f));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMovingAverage_1);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMovingAverage_1);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditGetMovingAverage_1->setText(QString("Bad Crc"));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMovingAverage_1);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMovingAverage_1);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateGetMovingAverage_2()
+void HartTester::indicateGetMovingAverage_2()
 {
     if(answerIsGet)
     {
@@ -2342,19 +2369,19 @@ void MainWindow::indicateGetMovingAverage_2()
         zData = b.getData();
         int f =zData[0];
         ui->lineEditGetMovingAverage_2->setText(QString().number(f));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMovingAverage_2);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMovingAverage_2);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditGetMovingAverage_2->setText(QString("Bad Crc"));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetMovingAverage_2);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetMovingAverage_2);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateGetA_40()
+void HartTester::indicateGetA_40()
 {
     if(answerIsGet)
     {
@@ -2374,19 +2401,19 @@ void MainWindow::indicateGetA_40()
         transf.ie[2] = zData[1];
         transf.ie[3] = zData[0];
         ui->lineEditGetA_40->setText(QString().number(transf.f));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetA_40);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetA_40);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditGetA_40->setText(QString("Bad Crc"));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetA_40);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetA_40);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateGetA_41()
+void HartTester::indicateGetA_41()
 {
     if(answerIsGet)
     {
@@ -2406,19 +2433,19 @@ void MainWindow::indicateGetA_41()
         transf.ie[2] = zData[1];
         transf.ie[3] = zData[0];
         ui->lineEditGetA_41->setText(QString().number(transf.f));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetA_41);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetA_41);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditGetA_41->setText(QString("Bad Crc"));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetA_41);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetA_41);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateGetA_42()
+void HartTester::indicateGetA_42()
 {
     if(answerIsGet)
     {
@@ -2438,19 +2465,19 @@ void MainWindow::indicateGetA_42()
         transf.ie[2] = zData[1];
         transf.ie[3] = zData[0];
         ui->lineEditGetA_42->setText(QString().number(transf.f));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetA_42);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetA_42);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditGetA_42->setText(QString("Bad Crc"));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetA_42);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetA_42);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateGetPressue()
+void HartTester::indicateGetPressue()
 {
     if(answerIsGet)
     {
@@ -2470,19 +2497,19 @@ void MainWindow::indicateGetPressue()
         transf.ie[2] = zData[1];
         transf.ie[3] = zData[0];
         ui->lineEditGetPressue->setText(QString().number(transf.f));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetPressue);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetPressue);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditGetPressue->setText(QString("Bad Crc"));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetPressue);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetPressue);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
-void MainWindow::indicateGetCurrent()
+void HartTester::indicateGetCurrent()
 {
     if(answerIsGet)
     {
@@ -2502,25 +2529,25 @@ void MainWindow::indicateGetCurrent()
         transf.ie[2] = zData[1];
         transf.ie[3] = zData[0];
         ui->lineEditGetCurrent->setText(QString().number(transf.f));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetCurrent);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetCurrent);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditGetCurrent->setText(QString("Bad Crc"));
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateGetCurrent);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateGetCurrent);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
 
-void MainWindow::on_checkBoxFixedCurrent_stateChanged()
+void HartTester::on_checkBoxFixedCurrent_stateChanged()
 {
     //ui->spinBoxMovingAverage_1->setStyleSheet(styleSheetCalibrationSpinBoxBad);
     ui->buttonSetFixedCurrent->setEnabled(false);
     ui->lineEditSetFixedCurrent->setEnabled(false);
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateStateFixedCurren);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateStateFixedCurren);
     unsigned char *dataChangeAddress = new unsigned char [2];
     dataChangeAddress[0] = 0x19;
     if(ui->checkBoxFixedCurrent->checkState())
@@ -2533,7 +2560,7 @@ void MainWindow::on_checkBoxFixedCurrent_stateChanged()
     timerCalibration->start(50);
     calibrationFunctions(dataChangeAddress,2);
 }
-void MainWindow::indicateStateFixedCurren()
+void HartTester::indicateStateFixedCurren()
 {
     if(answerIsGet)
     {
@@ -2541,7 +2568,7 @@ void MainWindow::indicateStateFixedCurren()
         countIndicateCalibration = 0;
         ui->buttonSetFixedCurrent->setEnabled(ui->checkBoxFixedCurrent->checkState());
         ui->lineEditSetFixedCurrent->setEnabled(ui->checkBoxFixedCurrent->checkState());
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateStateFixedCurren);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateStateFixedCurren);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
@@ -2550,16 +2577,16 @@ void MainWindow::indicateStateFixedCurren()
         ui->buttonSetFixedCurrent->setEnabled(false);
         ui->lineEditSetFixedCurrent->setEnabled(false);
         //ui->lineEditSetMaxValue->setStyleSheet(styleSheetCalibrationLineEditDefault);
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateStateFixedCurren);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateStateFixedCurren);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
 
-void MainWindow::setValueFixedCurrent()
+void HartTester::setValueFixedCurrent()
 {
 
-    connect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetValueFixedCurrent);
+    connect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetValueFixedCurrent);
     double text = ui->lineEditSetFixedCurrent->text().toDouble();
     if(text<4) text = 4;
     if(text>20) text = 20;
@@ -2575,26 +2602,26 @@ void MainWindow::setValueFixedCurrent()
     timerCalibration->start(50);
     calibrationFunctions(value,3);
 }
-void MainWindow::indicateSetValueFixedCurrent()
+void HartTester::indicateSetValueFixedCurrent()
 {
     if(answerIsGet)
     {
         ui->lineEditSetFixedCurrent->setStyleSheet(styleSheetCalibrationLineEditGood);
         countIndicateCalibration = 0;
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetValueFixedCurrent);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetValueFixedCurrent);
         timerCalibration->stop();
     }
     if(countIndicateCalibration>40)
     {
         countIndicateCalibration = 0;
         ui->lineEditSetFixedCurrent->setStyleSheet(styleSheetCalibrationLineEditDefault);
-        disconnect(timerCalibration, &QTimer::timeout, this, &MainWindow::indicateSetValueFixedCurrent);
+        disconnect(timerCalibration, &QTimer::timeout, this, &HartTester::indicateSetValueFixedCurrent);
         timerCalibration->stop();
     }
     countIndicateCalibration++;
 }
 
-void MainWindow::on_checkBoxCakibrationMiddle_stateChanged()
+void HartTester::on_checkBoxCakibrationMiddle_stateChanged()
 {
     if(ui->checkBoxCakibrationMiddle->checkState())
     {
@@ -2602,7 +2629,7 @@ void MainWindow::on_checkBoxCakibrationMiddle_stateChanged()
         ui->checkBoxCakibrationLow->setCheckState(Qt::Unchecked);
     }
 }
-void MainWindow::on_checkBoxCakibrationLow_stateChanged()
+void HartTester::on_checkBoxCakibrationLow_stateChanged()
 {
     if(ui->checkBoxCakibrationLow->checkState())
     {
@@ -2610,7 +2637,7 @@ void MainWindow::on_checkBoxCakibrationLow_stateChanged()
         ui->checkBoxCakibrationMiddle->setCheckState(Qt::Unchecked);
     }
 }
-void MainWindow::on_checkBoxCakibrationHigh_stateChanged()
+void HartTester::on_checkBoxCakibrationHigh_stateChanged()
 {
     if(ui->checkBoxCakibrationHigh->checkState())
     {
@@ -2618,8 +2645,13 @@ void MainWindow::on_checkBoxCakibrationHigh_stateChanged()
         ui->checkBoxCakibrationMiddle->setCheckState(Qt::Unchecked);
     }
 }
-void MainWindow::findCoef()
+void HartTester::findCoef()
 {
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
     QString fileDirCalibration;
     fileDirCalibration = QString("data/dataCalibrationLow_")+ui->comboBoxAddress->currentText()+QString(".txt");
     QFile fileCalibration(fileDirCalibration);
@@ -2664,15 +2696,26 @@ void MainWindow::findCoef()
     fileCalibration.close();
     float *UHigh = new float[3];
     UHigh = findMx(hHigh);
-    float U4n = UMiddle[2];
-    float U4l = ULow[2];
-    float U4h = UHigh[2];
-    float U1l = ULow[0];
-    float U1h = UHigh[0];
-    float U2l = ULow[1];
-    float U2h = UHigh[1];
+    U4n = UMiddle[2]*1000;
+    U4l = ULow[2]*1000;
+    U4h = UHigh[2]*1000;
+    U1l = ULow[0]*1000;
+    U1h = UHigh[0]*1000;
+    U2l = ULow[1]*1000;
+    U2h = UHigh[1]*1000;
+    answerIsGet = true;
+    answerAnalisys = true;
+    requset1FindCoef = 0;
+    requset2FindCoef = 0;
+    requset3FindCoef = 0;
+    requset4FindCoef = 0;
+    requset5FindCoef = 0;
+    countTimerFinc3 = 0;
+    ui->buttonFindCoef->setEnabled(false);
+    connect(timerFunction3,&QTimer::timeout,this,&HartTester::sendFindCoefRequest);
+    timerFunction3->start(timerSendRequest);
 
-    float U10 = ui->lineEditMaxValueGet_2->text().toFloat();
+    /*float U10 = ui->lineEditMaxValueGet_2->text().toFloat();
     float U20 = ui->lineEditMaxValueGet_2->text().toFloat();
     if(ui->lineEditMaxValueGet_2->text() == "nan" || ui->lineEditMaxValueGet_2->text() == "Bad Crc" || ui->lineEditMaxValueGet_2->text() == "")
     {
@@ -2684,24 +2727,143 @@ void MainWindow::findCoef()
     {
         ui->lineEditStatus->setText("Не получено максимальное значение статического давления");
         return void();
-    }
-    float K1 = Umax/(U1h-U10);
-    float K2 = Umax/(U2h-U20);
-    float a42 = 0,a41 = 0,a40 = 0;
-    a42 = -(K1*U10*U4h - K2*U20*U4h - K1*U10*U4l + K2*U20*U4l + K1*U1h*U4l - K1*U4h*U1l - K2*U2h*U4l + K2*U4h*U2l - K1*U1h*U4n + K2*U2h*U4n + K1*U1l*U4n - K2*U2l*U4n)/((U4h - U4l)*(U4h - U4n)*(U4l - U4n));
-    a41 = (- a42*U4l*U4l + a42*U4n*U4n + K1*(U10 - U1l) - K2*(U20 - U2l))/(U4l - U4n);
-    a40 = - a42*U4n*U4n - a41*U4n;
-    ui->lineEditSetA_42->setText(QString().number(a42));
-    ui->lineEditSetA_41->setText(QString().number(a41));
-    ui->lineEditSetA_40->setText(QString().number(a40));
+    }*/
+
 
 }
-void MainWindow::clearCalibrationData()
+void HartTester::sendFindCoefRequest()
+{
+    if(countTimerFinc3 >(3000/timerSendRequest))//timeout
+    {
+        countTimerFinc3 = 0;
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("НE УДАЛОСЬ ПОЛУЧИТЬ КОЭФФИЦИЕНТЫ");
+        ui->buttonFindCoef->setEnabled(true);
+        timerFunction3->stop();
+        return void();
+    }
+    if(answerIsGet && !requset1FindCoef&&answerAnalisys)
+    {   unsigned char *data = new unsigned char [2];
+        data[0] = 0x1e;
+        data[1] = 0x04;
+        calibrationFunctionsGet(data,5);
+        answerAnalisys = false;
+        requset1FindCoef = true;
+        return void();
+    }
+    if(answerIsGet && !requset2FindCoef&&answerAnalisys)
+    {    unsigned char *data = new unsigned char [2];
+        data[0] = 0x26;
+        data[1] = 0x04;
+        calibrationFunctionsGet(data,5);
+        answerAnalisys = false;
+        requset2FindCoef = true;
+        return void();
+    }
+    if(answerIsGet && !requset3FindCoef&&answerAnalisys)
+    {   unsigned char *data = new unsigned char [2];
+        data[0] = 0x2a;
+        data[1] = 0x04;
+        calibrationFunctionsGet(data,5);
+        answerAnalisys = false;
+        requset3FindCoef = true;
+        return void();
+    }
+    if(answerIsGet && !requset4FindCoef&&answerAnalisys)
+    {    unsigned char *data = new unsigned char [2];
+        data[0] = 0x2e;
+        data[1] = 0x04;
+        calibrationFunctionsGet(data,5);
+        answerAnalisys = false;
+        requset4FindCoef = true;
+        return void();
+    }
+    if(answerIsGet && !requset5FindCoef&&answerAnalisys)
+    {   unsigned char *data = new unsigned char [2];
+        data[0] = 0x32;
+        data[1] = 0x04;
+        calibrationFunctionsGet(data,5);
+        answerAnalisys = false;
+        requset5FindCoef = true;
+        return void();
+    }
+    countTimerFinc3++;
+    if(answerIsGet)
+    {
+            countTimerFinc3 = 0;
+            answerAnalisys = true;
+            answer b(inBytesExpected);
+            b.createAnswer(ansGet,inBytesExpected);
+            b.analysis();
+            char *zData = new char [5];
+            zData = b.getData();
+            union{
+                float f;
+                char ie[4];
+
+            }transf;
+            transf.ie[0] = zData[3];
+            transf.ie[1] = zData[2];
+            transf.ie[2] = zData[1];
+            transf.ie[3] = zData[0];
+            //ui->lineEditGetA_40->setText(QString().number(transf.f));
+            //ui->lineEditStatus->insert(QString().number(transf.f));
+            if(requset1FindCoef&&!requset2FindCoef)
+            {
+                Pkstat = transf.f;
+            }
+            if(requset2FindCoef&&!requset3FindCoef)
+            {
+                Uk1h = transf.f;
+            }
+            if(requset3FindCoef&&!requset4FindCoef)
+            {
+                Uk2h = transf.f;
+            }
+            if(requset4FindCoef&&!requset5FindCoef)
+            {
+                Uk10 = transf.f;
+            }
+            if(requset4FindCoef&&requset5FindCoef)
+            {
+                Uk20 = transf.f;
+            }
+            if(requset5FindCoef&&requset4FindCoef&&requset3FindCoef&&requset2FindCoef&&requset1FindCoef)
+            {
+                float U10 = Uk10;
+                float U20 = Uk20;
+//                U10 = 3392;
+//                U20 = 2918;
+//                Uk1h = 19490;
+//                Uk2h = 11098;
+                float K1 = Pkstat/(Uk1h-U10);
+                float K2 = Pkstat/(Uk2h-U20);
+                float a42 = 0,a41 = 0,a40 = 0;
+                a42 = -(K1*U10*U4h - K2*U20*U4h - K1*U10*U4l + K2*U20*U4l + K1*U1h*U4l - K1*U4h*U1l - K2*U2h*U4l + K2*U4h*U2l - K1*U1h*U4n + K2*U2h*U4n + K1*U1l*U4n - K2*U2l*U4n)/((U4h - U4l)*(U4h - U4n)*(U4l - U4n));
+                a41 = (- a42*U4l*U4l + a42*U4n*U4n + K1*(U10 - U1l) - K2*(U20 - U2l))/(U4l - U4n);
+                a40 = - a42*U4n*U4n - a41*U4n;
+                ui->lineEditSetA_40->setText(QString().number(a42));
+                ui->lineEditSetA_41->setText(QString().number(a41));
+                ui->lineEditSetA_42->setText(QString().number(a40));
+                disconnect(timerFunction3, &QTimer::timeout, this, &HartTester::sendFindCoefRequest);
+                ui->buttonFindCoef->setEnabled(true);
+                timerFunction3->stop();
+                if(ui->checkBoxParameterOutput->checkState())
+                {
+                    setDialog.show();
+                    setDialog.dialogData(Pkstat,Uk1h,Uk2h,U10,U20,U4l,U4n,U4h,U1l,U1h,U2l,U2h);
+                }
+                countTimerFinc3 = 0;
+            }
+    }
+}
+void HartTester::clearCalibrationData()
 {
     removeFile(ui->comboBoxAddress->currentText());
 }
 
-void MainWindow::on_spinBox_2_valueChanged(int arg1)
+
+void HartTester::on_spinBox_2_valueChanged(int arg1)
 {
-    timerSendRequest = arg1;
+        timerSendRequest = arg1;
 }

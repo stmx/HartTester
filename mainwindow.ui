@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>1008</width>
-    <height>529</height>
+    <height>526</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>HartTester</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -40,7 +40,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>2</number>
     </property>
     <property name="iconSize">
      <size>
@@ -1096,6 +1096,38 @@
        <string>Address Long</string>
       </property>
      </widget>
+     <widget class="QLabel" name="label_29">
+      <property name="geometry">
+       <rect>
+        <x>470</x>
+        <y>10</y>
+        <width>91</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Частота опроса</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spinBox_2">
+      <property name="geometry">
+       <rect>
+        <x>560</x>
+        <y>10</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>10</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>150</number>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_2">
      <attribute name="title">
@@ -1350,38 +1382,6 @@
       </property>
       <property name="text">
        <string>Очистить данные калибровки</string>
-      </property>
-     </widget>
-     <widget class="QSpinBox" name="spinBox_2">
-      <property name="geometry">
-       <rect>
-        <x>930</x>
-        <y>90</y>
-        <width>51</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="minimum">
-       <number>10</number>
-      </property>
-      <property name="maximum">
-       <number>10000</number>
-      </property>
-      <property name="value">
-       <number>150</number>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_16">
-      <property name="geometry">
-       <rect>
-        <x>840</x>
-        <y>90</y>
-        <width>91</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Частота опроса</string>
       </property>
      </widget>
     </widget>
@@ -2592,6 +2592,19 @@
        </item>
       </layout>
      </widget>
+     <widget class="QCheckBox" name="checkBoxParameterOutput">
+      <property name="geometry">
+       <rect>
+        <x>810</x>
+        <y>350</y>
+        <width>131</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Вывести параметры</string>
+      </property>
+     </widget>
     </widget>
    </widget>
    <widget class="QComboBox" name="comboBoxAddress">
@@ -2746,6 +2759,12 @@
      <width>1008</width>
      <height>21</height>
     </rect>
+   </property>
+   <property name="defaultUp">
+    <bool>false</bool>
+   </property>
+   <property name="nativeMenuBar">
+    <bool>true</bool>
    </property>
    <widget class="QMenu" name="menu">
     <property name="title">

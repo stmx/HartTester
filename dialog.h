@@ -13,6 +13,7 @@ class Dialog : public QDialog
 
 public:
     explicit Dialog(QWidget *parent = nullptr);
+    void dialogData(float Pstat,float Uk1h,float Uk2h, float Uk10, float Uk20,float U4l,float U4m,float U4h, float U1l, float U1h, float U2l, float U2h);
     ~Dialog();
 
 private:

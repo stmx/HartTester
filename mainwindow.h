@@ -8,16 +8,16 @@
 #include <QComboBox>
 
 namespace Ui {
-class MainWindow;
+class HartTester;
 }
 
-class MainWindow : public QMainWindow
+class HartTester : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    explicit HartTester(QWidget *parent = nullptr);
+    ~HartTester();
 
 private slots:
     void connectCOM();
@@ -146,9 +146,11 @@ private slots:
     void connections();
     void aboutHartTester();
     void aboutQt();
+    void sendFindCoefRequest();
+
 private:
     Dialog setDialog;
-    Ui::MainWindow *ui;
+    Ui::HartTester *ui;
     QSerialPort *serial = nullptr;
     QTimer *timer = nullptr;
     QTimer *timerFunction3 = nullptr;
