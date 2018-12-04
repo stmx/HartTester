@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1008</width>
-    <height>526</height>
+    <width>1011</width>
+    <height>555</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,13 +21,19 @@
     <string notr="true"/>
    </property>
    <widget class="QTabWidget" name="tabWidget">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>0</x>
       <y>50</y>
       <width>1381</width>
-      <height>421</height>
+      <height>491</height>
      </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
     </property>
     <property name="styleSheet">
      <string notr="true">QTabBar::tab { height: 20px;}
@@ -1096,38 +1102,6 @@
        <string>Address Long</string>
       </property>
      </widget>
-     <widget class="QLabel" name="label_29">
-      <property name="geometry">
-       <rect>
-        <x>470</x>
-        <y>10</y>
-        <width>91</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Частота опроса</string>
-      </property>
-     </widget>
-     <widget class="QSpinBox" name="spinBox_2">
-      <property name="geometry">
-       <rect>
-        <x>560</x>
-        <y>10</y>
-        <width>51</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="minimum">
-       <number>10</number>
-      </property>
-      <property name="maximum">
-       <number>10000</number>
-      </property>
-      <property name="value">
-       <number>150</number>
-      </property>
-     </widget>
     </widget>
     <widget class="QWidget" name="tab_2">
      <attribute name="title">
@@ -1136,9 +1110,9 @@
      <widget class="QPushButton" name="buttonFunction3Send">
       <property name="geometry">
        <rect>
-        <x>840</x>
+        <x>10</x>
         <y>10</y>
-        <width>141</width>
+        <width>111</width>
         <height>23</height>
        </rect>
       </property>
@@ -1149,9 +1123,9 @@
      <widget class="QPushButton" name="buttonFunction3Loop">
       <property name="geometry">
        <rect>
-        <x>840</x>
-        <y>36</y>
-        <width>141</width>
+        <x>130</x>
+        <y>10</y>
+        <width>111</width>
         <height>23</height>
        </rect>
       </property>
@@ -1162,9 +1136,9 @@
      <widget class="QPushButton" name="pushButton_10">
       <property name="geometry">
        <rect>
-        <x>840</x>
-        <y>60</y>
-        <width>141</width>
+        <x>130</x>
+        <y>40</y>
+        <width>111</width>
         <height>23</height>
        </rect>
       </property>
@@ -1176,7 +1150,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>370</y>
+        <y>400</y>
         <width>75</width>
         <height>23</height>
        </rect>
@@ -1257,17 +1231,29 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>10</y>
+        <y>70</y>
         <width>821</width>
-        <height>351</height>
+        <height>321</height>
        </rect>
       </property>
       <property name="editTriggers">
        <set>QAbstractItemView::DoubleClicked</set>
       </property>
-      <property name="sortingEnabled">
-       <bool>true</bool>
+      <property name="gridStyle">
+       <enum>Qt::SolidLine</enum>
       </property>
+      <property name="sortingEnabled">
+       <bool>false</bool>
+      </property>
+      <attribute name="horizontalHeaderDefaultSectionSize">
+       <number>100</number>
+      </attribute>
+      <attribute name="horizontalHeaderMinimumSectionSize">
+       <number>39</number>
+      </attribute>
+      <attribute name="horizontalHeaderStretchLastSection">
+       <bool>false</bool>
+      </attribute>
      </widget>
      <widget class="QComboBox" name="comboBoxAddressFunc3_1">
       <property name="geometry">
@@ -1384,8 +1370,251 @@
        <string>Очистить данные калибровки</string>
       </property>
      </widget>
+     <widget class="QSpinBox" name="spinBox_2">
+      <property name="geometry">
+       <rect>
+        <x>930</x>
+        <y>90</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>10</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>150</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_29">
+      <property name="geometry">
+       <rect>
+        <x>840</x>
+        <y>90</y>
+        <width>91</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Частота опроса</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spinBoxPressuePos">
+      <property name="geometry">
+       <rect>
+        <x>330</x>
+        <y>10</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="maximum">
+       <number>1000</number>
+      </property>
+      <property name="value">
+       <number>100</number>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spinBoxPressueNeg">
+      <property name="geometry">
+       <rect>
+        <x>440</x>
+        <y>10</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="maximum">
+       <number>1000</number>
+      </property>
+      <property name="value">
+       <number>100</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_43">
+      <property name="geometry">
+       <rect>
+        <x>313</x>
+        <y>10</y>
+        <width>16</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>P+</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_44">
+      <property name="geometry">
+       <rect>
+        <x>428</x>
+        <y>10</y>
+        <width>16</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>P-</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_45">
+      <property name="geometry">
+       <rect>
+        <x>383</x>
+        <y>10</y>
+        <width>21</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>кПа</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_46">
+      <property name="geometry">
+       <rect>
+        <x>492</x>
+        <y>10</y>
+        <width>21</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>кПа</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="buttonSetPressue">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>40</y>
+        <width>201</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Записывать давление</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBoxSamePressue">
+      <property name="geometry">
+       <rect>
+        <x>406</x>
+        <y>10</y>
+        <width>16</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="buttonMO">
+      <property name="geometry">
+       <rect>
+        <x>580</x>
+        <y>10</y>
+        <width>121</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Усреднять значения</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="buttonClearMO">
+      <property name="geometry">
+       <rect>
+        <x>580</x>
+        <y>40</y>
+        <width>121</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Сбросить усреднение</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelU1">
+      <property name="geometry">
+       <rect>
+        <x>110</x>
+        <y>400</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>U1=0.0000 мВ</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelU2">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>400</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>U2=0.0000 мВ</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelU3">
+      <property name="geometry">
+       <rect>
+        <x>330</x>
+        <y>400</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>U3=0.0000 мВ</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelU4">
+      <property name="geometry">
+       <rect>
+        <x>440</x>
+        <y>400</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>U4=0.0000 мВ</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="buttonAddDataCoef">
+      <property name="geometry">
+       <rect>
+        <x>710</x>
+        <y>10</y>
+        <width>121</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; width:120px;&quot;&gt;Добавляет данные для расчета коэффициентов&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="text">
+       <string>Добавить данные</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_3">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <attribute name="title">
       <string>Калибровка</string>
      </attribute>
@@ -1668,8 +1897,8 @@
       <property name="geometry">
        <rect>
         <x>810</x>
-        <y>322</y>
-        <width>151</width>
+        <y>290</y>
+        <width>181</width>
         <height>23</height>
        </rect>
       </property>
@@ -2596,13 +2825,39 @@
       <property name="geometry">
        <rect>
         <x>810</x>
-        <y>350</y>
+        <y>340</y>
         <width>131</width>
         <height>17</height>
        </rect>
       </property>
       <property name="text">
        <string>Вывести параметры</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="buttonFindCoefMNK">
+      <property name="geometry">
+       <rect>
+        <x>810</x>
+        <y>260</y>
+        <width>181</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Рассчитать коэфиициенты(МНК)</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBoxFromFile">
+      <property name="geometry">
+       <rect>
+        <x>810</x>
+        <y>320</y>
+        <width>131</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Данные из файла</string>
       </property>
      </widget>
     </widget>
@@ -2738,7 +2993,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>470</y>
+      <y>500</y>
       <width>1011</width>
       <height>21</height>
      </rect>
@@ -2756,7 +3011,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1008</width>
+     <width>1011</width>
      <height>21</height>
     </rect>
    </property>

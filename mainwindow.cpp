@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "request.h"
 #include "answer.h"
+#include "calibration.h"
 #include "dialog.h"
 #include <QtSerialPort>
 #include <QSerialPortInfo>
@@ -82,6 +83,14 @@ static float U1l = 0;
 static float U1h = 0;
 static float U2l = 0;
 static float U2h = 0;
+static float PPos = 100;
+static float PNeg = 100;
+static float avarageU1 = 0;
+static float avarageU2 = 0;
+static float avarageU3 = 0;
+static float avarageU4 = 0;
+static int Navarage = 0;
+
 
 void ResetAddress()
 {
@@ -191,6 +200,9 @@ HartTester::HartTester(QWidget *parent) :
         ui->lineEditSetFixedCurrent->setEnabled(ui->checkBoxFixedCurrent->checkState());
         //ui->tabWidget->setTabEnabled(0,false);
 
+        PPos = ui->spinBoxPressuePos->value();
+        PNeg = ui->spinBoxPressueNeg->value();
+
         ui->label_3->setStyleSheet(styleSheetCalibrationDefault);
         ui->label_4->setStyleSheet(styleSheetCalibrationDefault);
         ui->label_5->setStyleSheet(styleSheetCalibrationDefault);
@@ -298,6 +310,12 @@ void HartTester::connections()
     connect(ui->buttonUpdateCom,        &QPushButton::clicked,  this,   &HartTester::updateCom);
     connect(ui->buttonFindCoef,         &QPushButton::clicked,  this,   &HartTester::findCoef);
     connect(ui->buttonClearCalibration, &QPushButton::clicked,  this,   &HartTester::clearCalibrationData);
+    connect(ui->buttonSetPressue,       &QPushButton::clicked,  this,   &HartTester::setPressue);
+    connect(ui->buttonMO,               &QPushButton::clicked,  this,   &HartTester::MO);
+    connect(ui->buttonClearMO,          &QPushButton::clicked,  this,   &HartTester::clearMO);
+    connect(ui->buttonAddDataCoef,      &QPushButton::clicked,  this,   &HartTester::addDataCoef);
+    connect(ui->buttonFindCoefMNK,      &QPushButton::clicked,  this,   &HartTester::findCoefMNK);
+    connect(&setDialog, SIGNAL(MySetValueSignal(float*)), this, SLOT(testFunc(float*)));
 }
 void HartTester::downloadSettings()
 {
@@ -569,20 +587,176 @@ void HartTester::sendRequest()//send
         ui->pushButton_7->setEnabled(true);
     }
 }
-void HartTester::readData()//read data
+void HartTester::displayData(answer b)
 {
-
     QStandardItem *item;
     QStringList horizontalHeader;
     horizontalHeader.append("Адрес");
-    horizontalHeader.append("Значение тока, мА");
-    horizontalHeader.append("Напряжение U1");
-    horizontalHeader.append("Напряжение U2");
-    horizontalHeader.append("Напряжение U3");
-    horizontalHeader.append("Напряжение U4");
+    horizontalHeader.append("Ток, мА");
+    horizontalHeader.append("U1, мВ");
+    horizontalHeader.append("U2, мВ");
+    horizontalHeader.append("U3, мВ");
+    horizontalHeader.append("U4, мВ");
+    horizontalHeader.append("P+, кПа");
+    horizontalHeader.append("P-, кПа");
     horizontalHeader.append("CRC");
     horizontalHeader.append("Файл");
     model->setHorizontalHeaderLabels(horizontalHeader);
+
+    char *zData = new char [int(b.getnDataByte())];
+    zData = b.getData();
+    union{
+        float f;
+        char ie[4];
+    }transf;
+    int fg = 0;
+    if (b.isLongFrame())
+    {
+        fg = 5;
+    }
+    else
+    {
+        fg = 1;
+    }
+    if(b.CrcIsCorrect())
+    {
+        item = new QStandardItem(QString("Ok"));
+        item->setBackground(Qt::green);
+        model->setItem(numberRow, 8, item);
+    }
+    else
+    {
+        item = new QStandardItem(QString("Bad"));
+        item->setBackground(Qt::red);
+        model->setItem(numberRow, 8, item);
+
+    }
+    QString ghb = QByteArray(b.getAddress(),fg).toHex();
+    QString gh;
+    if (b.isLongFrame()) gh = QString(ghb[4])+QString(ghb[5]);
+    else gh = ghb;
+    /*///////////////////////////////////////////
+    //Объявлениу и открытие файла записи данных//
+    ///////////////////////////////////////////*/
+    QString fileDir = QString("data/data_")+QString(gh)+QString(".txt");
+    QFile file1(fileDir);
+    if(!file1.open(QIODevice::Append | QIODevice::Text) || !b.CrcIsCorrect())
+    {
+        item = new QStandardItem(QString("Ошибка открытия"));
+        item->setBackground(QColor(255,128,0));
+        model->setItem(numberRow, 9, item);
+
+    }
+    else
+    {
+        item = new QStandardItem(QString("Записан"));
+        item->setBackground(QColor(0,128,128));
+        model->setItem(numberRow, 9, item);
+    }
+    /*//////////////////////////////////////////////////////
+    //Объявлениу и открытие файла записи данных калибровки//
+    //////////////////////////////////////////////////////*/
+    QString fileDirCalibration;
+    if(ui->checkBoxCakibrationMiddle->checkState())
+    {
+        fileDirCalibration = QString("data/dataCalibrationMiddle_")+QString(gh)+QString(".txt");
+    }else if(ui->checkBoxCakibrationLow->checkState())
+    {
+       fileDirCalibration = QString("data/dataCalibrationLow_")+QString(gh)+QString(".txt");
+    }else if(ui->checkBoxCakibrationHigh->checkState())
+    {
+        fileDirCalibration = QString("data/dataCalibrationHigh_")+QString(gh)+QString(".txt");
+    }
+    QFile fileCalibration;
+    fileCalibration.setFileName(fileDirCalibration);
+    bool IsWriteCalibration;
+    IsWriteCalibration = ui->checkBoxCakibrationHigh->checkState() || ui->checkBoxCakibrationLow->checkState() ||ui->checkBoxCakibrationMiddle->checkState();
+    if(IsWriteCalibration)
+    {
+        if(!fileCalibration.open(QIODevice::Append | QIODevice::Text))
+        {
+            ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgba(255,64,0);color:white}");
+            ui->lineEditStatus->setText("Файл калибровки не записан");
+        }else
+        {
+            ui->lineEditStatus->setText("Успешно");
+        }
+    }
+    /*////////////////////////////////////////////
+    //Анализ и запись в необходимые файлы данных//
+    ////////////////////////////////////////////*/
+    QDateTime timeNow = QDateTime::currentDateTime();
+    item = new QStandardItem(QString(gh));
+    model->setItem(numberRow, 0, item);
+    if(b.CrcIsCorrect()) file1.write(QByteArray(timeNow.toString("dd.MM.yyyy hh:mm:ss").toUtf8())+QByteArray("\t"));
+    transf.ie[0] = zData[3];//запись тока
+    transf.ie[1] = zData[2];//запись тока
+    transf.ie[2] = zData[1];//запись тока
+    transf.ie[3] = zData[0];//запись тока
+    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
+    model->setItem(numberRow, 1, item);
+    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+    transf.ie[0] = zData[8];//запись первой перемнной
+    transf.ie[1] = zData[7];//запись первой перемнной
+    transf.ie[2] = zData[6];//запись первой перемнной
+    transf.ie[3] = zData[5];//запись первой перемнной
+    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
+    model->setItem(numberRow, 2, item);
+    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+    if(b.CrcIsCorrect() && IsWriteCalibration) fileCalibration.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+    if(b.CrcIsCorrect() && MOStart)
+    {
+        Navarage++;
+        avarageU1 = (avarageU1*(Navarage-1)+transf.f)/(Navarage);
+    }
+    transf.ie[0] = zData[13];//запись второй перемнной
+    transf.ie[1] = zData[12];//запись второй перемнной
+    transf.ie[2] = zData[11];//запись второй перемнной
+    transf.ie[3] = zData[10];//запись второй перемнной
+    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
+    model->setItem(numberRow, 3, item);
+    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+    if(b.CrcIsCorrect() && IsWriteCalibration) fileCalibration.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+    if(b.CrcIsCorrect() && MOStart) avarageU2 = (avarageU2*(Navarage-1)+transf.f)/(Navarage);
+    transf.ie[0] = zData[18];//запись третьей перемнной
+    transf.ie[1] = zData[17];//запись третьей перемнной
+    transf.ie[2] = zData[16];//запись третьей перемнной
+    transf.ie[3] = zData[15];//запись третьей перемнной
+    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
+    model->setItem(numberRow, 4, item);
+    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+    if(b.CrcIsCorrect() && MOStart) avarageU3 = (avarageU3*(Navarage-1)+transf.f)/(Navarage);
+    transf.ie[0] = zData[23];//запись четвертой перемнной
+    transf.ie[1] = zData[22];//запись четвертой перемнной
+    transf.ie[2] = zData[21];//запись четвертой перемнной
+    transf.ie[3] = zData[20];//запись четвертой перемнной
+    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
+    model->setItem(numberRow, 5, item);
+    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+    if(b.CrcIsCorrect() && IsWriteCalibration) fileCalibration.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
+    if(b.CrcIsCorrect() && MOStart) avarageU4 = (avarageU4*(Navarage-1)+transf.f)/(Navarage);
+
+    item = new QStandardItem(QString("%1").number(PPos));
+    model->setItem(numberRow, 6, item);
+    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(PPos)+QByteArray("\t"));
+    item = new QStandardItem(QString("%1").number(PNeg));
+    model->setItem(numberRow, 7, item);
+    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(PNeg)+QByteArray("\n"));
+    ui->labelU1->setText("U1="+QString("%1").number(avarageU1,'f',4)+" мВ");
+    ui->labelU2->setText("U2="+QString("%1").number(avarageU2,'f',4)+" мВ");
+    ui->labelU3->setText("U3="+QString("%1").number(avarageU3,'f',4)+" мВ");
+    ui->labelU4->setText("U4="+QString("%1").number(avarageU4,'f',4)+" мВ");
+    ui->tableView->setModel(model);
+    ui->tableView->resizeRowsToContents();
+    ui->tableView->resizeColumnsToContents();
+    ui->tableView->scrollToBottom();
+    numberRow++;
+    file1.close();
+    fileCalibration.close();
+}
+void HartTester::readData()//read data
+{
+
 
     int bytesAvaible = int(serial->bytesAvailable());
     char *buf = new char[bytesAvaible];
@@ -620,137 +794,9 @@ void HartTester::readData()//read data
                     answerIsGet = true;
                     ui->lineEditStatus->setText("ОТВЕТ ПОЛУЧЕН");
                 }
-                if (int(ui->tabWidget->currentIndex())==1 && !timerFindDevice->isActive()) {
-                    //text_out->setTextBackgroundColor(QColor(0,0,0));
-                    //text_out->setTextColor(QColor(255,255,255));
-                    char *zData = new char [int(b.getnDataByte())];
-                    zData = b.getData();
-                    union{
-                        float f;
-                        char ie[4];
-                    }transf;
-                    int fg = 0;
-                    if (b.isLongFrame())
-                    {
-                        fg = 5;
-                    }
-                    else
-                    {
-                        fg = 1;
-                    }
-                    if(b.CrcIsCorrect())
-                    {
-                        item = new QStandardItem(QString("Ok"));
-                        item->setBackground(Qt::green);
-                        model->setItem(numberRow, 6, item);
-                    }
-                    else
-                    {
-                        item = new QStandardItem(QString("Bad"));
-                        item->setBackground(Qt::red);
-                        model->setItem(numberRow, 6, item);
-
-                    }
-                    QString ghb = QByteArray(b.getAddress(),fg).toHex();
-                    QString gh;
-                    if (b.isLongFrame()) gh = QString(ghb[4])+QString(ghb[5]);
-                    else gh = ghb;
-                    QString fileDir = QString("data/data_")+QString(gh)+QString(".txt");
-                    QFile file1(fileDir);
-
-                    QString fileDirCalibration;
-                    if(ui->checkBoxCakibrationMiddle->checkState())
-                    {
-                        fileDirCalibration = QString("data/dataCalibrationMiddle_")+QString(gh)+QString(".txt");
-                    }else if(ui->checkBoxCakibrationLow->checkState())
-                    {
-                       fileDirCalibration = QString("data/dataCalibrationLow_")+QString(gh)+QString(".txt");
-                    }else if(ui->checkBoxCakibrationHigh->checkState())
-                    {
-                        fileDirCalibration = QString("data/dataCalibrationHigh_")+QString(gh)+QString(".txt");
-                    }
-
-                    QFile fileCalibration;
-                    fileCalibration.setFileName(fileDirCalibration);
-                    if(!file1.open(QIODevice::Append | QIODevice::Text))
-                    {
-                        item = new QStandardItem(QString("Ошибка открытия"));
-                        item->setBackground(QColor(255,128,0));
-                        model->setItem(numberRow, 7, item);
-
-                    }
-                    else
-                    {
-                        item = new QStandardItem(QString("Записан"));
-                        item->setBackground(QColor(0,128,128));
-                        model->setItem(numberRow, 7, item);
-                    }
-                    bool IsWriteCalibration;
-                    IsWriteCalibration = ui->checkBoxCakibrationHigh->checkState() || ui->checkBoxCakibrationLow->checkState() ||ui->checkBoxCakibrationMiddle->checkState();
-                    if(IsWriteCalibration)
-                    {
-                        if(!fileCalibration.open(QIODevice::Append | QIODevice::Text))
-                        {
-                            ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgba(255,64,0);color:white}");
-                            ui->lineEditStatus->setText("Файл калибровки не записан");
-                        }else
-                        {
-                            ui->lineEditStatus->setText("Успешно");
-                        }
-                    }
-                    QDateTime timeNow = QDateTime::currentDateTime();
-                    item = new QStandardItem(QString(gh));
-                    model->setItem(numberRow, 0, item);
-                    if(b.CrcIsCorrect()) file1.write(QByteArray(timeNow.toString("dd.MM.yyyy hh:mm:ss").toUtf8())+QByteArray("\t"));
-                    transf.ie[0] = zData[3];//запись тока
-                    transf.ie[1] = zData[2];//запись тока
-                    transf.ie[2] = zData[1];//запись тока
-                    transf.ie[3] = zData[0];//запись тока
-                    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
-                    model->setItem(numberRow, 1, item);
-                    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
-                    transf.ie[0] = zData[8];//запись первой перемнной
-                    transf.ie[1] = zData[7];//запись первой перемнной
-                    transf.ie[2] = zData[6];//запись первой перемнной
-                    transf.ie[3] = zData[5];//запись первой перемнной
-                    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
-                    model->setItem(numberRow, 2, item);
-                    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
-                    if(b.CrcIsCorrect() && IsWriteCalibration) fileCalibration.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
-                    transf.ie[0] = zData[13];//запись второй перемнной
-                    transf.ie[1] = zData[12];//запись второй перемнной
-                    transf.ie[2] = zData[11];//запись второй перемнной
-                    transf.ie[3] = zData[10];//запись второй перемнной
-                    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
-                    model->setItem(numberRow, 3, item);
-                    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
-                    if(b.CrcIsCorrect() && IsWriteCalibration) fileCalibration.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
-                    transf.ie[0] = zData[18];//запись третьей перемнной
-                    transf.ie[1] = zData[17];//запись третьей перемнной
-                    transf.ie[2] = zData[16];//запись третьей перемнной
-                    transf.ie[3] = zData[15];//запись третьей перемнной
-                    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
-                    model->setItem(numberRow, 4, item);
-                    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
-                    transf.ie[0] = zData[23];//запись четвертой перемнной
-                    transf.ie[1] = zData[22];//запись четвертой перемнной
-                    transf.ie[2] = zData[21];//запись четвертой перемнной
-                    transf.ie[3] = zData[20];//запись четвертой перемнной
-                    item = new QStandardItem(QString("%1").number(transf.f,'f',4));
-                    model->setItem(numberRow, 5, item);
-                    if(b.CrcIsCorrect()) file1.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\n"));
-                    if(b.CrcIsCorrect() && IsWriteCalibration) fileCalibration.write(QByteArray("%1").number(transf.f,'e',4)+QByteArray("\t"));
-                    ui->tableView->setModel(model);
-                    ui->tableView->resizeRowsToContents();
-                    ui->tableView->resizeColumnsToContents();
-                    numberRow++;
-//                    if(numberRow > 6)
-//                    {
-//                        model->removeRows(1,numberRow);
-//                        numberRow = 1;
-//                    }
-                    file1.close();
-                    fileCalibration.close();
+                if (int(ui->tabWidget->currentIndex())==1 && !timerFindDevice->isActive())
+                {
+                    displayData(b);
                 }
                 if(!ui->checkAltView->checkState())
                 {
@@ -1344,12 +1390,16 @@ void HartTester::sendTimerRequestLoop()
 }
 void HartTester::startLoopFunction3()
 {    
+    ui->tabWidget->setTabEnabled(0,false);
+    ui->tabWidget->setTabEnabled(2,false);
     connect(timerFunction3Loop,&QTimer::timeout,this,&HartTester::sendTimerRequestLoop);
     Function3Send();
     timerFunction3Loop->start(timerSendRequest);
 }
 void HartTester::stopLoopFunction3()
 {
+    ui->tabWidget->setTabEnabled(0,true);
+    ui->tabWidget->setTabEnabled(2,true);
     disconnect(timerFunction3Loop,&QTimer::timeout,this,&HartTester::sendTimerRequestLoop);
     timerFunction3Loop->stop();
 }
@@ -2866,4 +2916,531 @@ void HartTester::clearCalibrationData()
 void HartTester::on_spinBox_2_valueChanged(int arg1)
 {
         timerSendRequest = arg1;
+}
+void HartTester::setPressue()
+{
+    PPos = ui->spinBoxPressuePos->value();
+    PNeg = ui->spinBoxPressueNeg->value();
+}
+
+void HartTester::on_spinBoxPressueNeg_valueChanged(int arg1)
+{
+    if(ui->checkBoxSamePressue->checkState() && ui->spinBoxPressuePos->value() != ui->spinBoxPressueNeg->value())
+    {
+        ui->spinBoxPressuePos->setValue(ui->spinBoxPressueNeg->value());
+    }
+}
+void HartTester::on_spinBoxPressuePos_valueChanged(int arg1)
+{
+    if(ui->checkBoxSamePressue->checkState() && ui->spinBoxPressuePos->value()!=ui->spinBoxPressueNeg->value())
+    {
+        ui->spinBoxPressueNeg->setValue(ui->spinBoxPressuePos->value());
+    }
+}
+void HartTester::MO()
+{
+    MOStart = true;
+}
+void HartTester::clearMO()
+{
+    MOStart = false;
+    avarageU1 = 0;
+    avarageU2 = 0;
+    avarageU3 = 0;
+    avarageU4 = 0;
+    Navarage = 0;
+    ui->labelU1->setText("U1="+QString("%1").number(avarageU1,'f',4)+" мВ");
+    ui->labelU2->setText("U2="+QString("%1").number(avarageU2,'f',4)+" мВ");
+    ui->labelU3->setText("U3="+QString("%1").number(avarageU3,'f',4)+" мВ");
+    ui->labelU4->setText("U4="+QString("%1").number(avarageU4,'f',4)+" мВ");
+}
+void HartTester::addDataCoef()
+{
+    float *dataCoef = new float [6];
+    dataCoef[0]=avarageU1*1000;
+    dataCoef[1]=avarageU2*1000;
+    dataCoef[2]=avarageU3*1000;
+    dataCoef[3]=avarageU4*1000;
+    dataCoef[4]=ui->spinBoxPressuePos->value()*1000;
+    dataCoef[5]=ui->spinBoxPressueNeg->value()*1000;
+    deviceCoef.addLine(dataCoef);
+    /*///////////////////////////////////////////
+    //Объявлениу и открытие файла записи данных МНК//
+    ///////////////////////////////////////////*/
+
+    QString fileDirMNK = QString("data/dataMNK_")+QString(ui->comboBoxAddress->currentText())+QString(".txt");
+    QFile fileMNK(fileDirMNK);
+    if(!fileMNK.open(QIODevice::Append | QIODevice::Text))
+    {
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgba(255,64,0);color:white}");
+        ui->lineEditStatus->setText("Файл калибровки МНК не записан");
+
+    }
+    else
+    {
+        fileMNK.write(QByteArray("%1").number(avarageU1,'e',4)+QByteArray("\t"));
+        fileMNK.write(QByteArray("%1").number(avarageU2,'e',4)+QByteArray("\t"));
+        fileMNK.write(QByteArray("%1").number(avarageU3,'e',4)+QByteArray("\t"));
+        fileMNK.write(QByteArray("%1").number(avarageU4,'e',4)+QByteArray("\t"));
+        fileMNK.write(QByteArray("%1").number(ui->spinBoxPressuePos->value(),'e',4)+QByteArray("\t"));
+        fileMNK.write(QByteArray("%1").number(ui->spinBoxPressueNeg->value(),'e',4)+QByteArray("\n"));
+        ui->lineEditStatus->setText("Файл калибровки МНК записан");
+    }
+    fileMNK.close();
+}
+void HartTester::findCoefMNK()
+{
+    if(!serial->isOpen()){
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("ПОРТ НЕ ОТКРЫТ");
+        return void();
+    }
+    QString fileDirCalibration;
+    fileDirCalibration = QString("data/dataCalibrationLow_")+ui->comboBoxAddress->currentText()+QString(".txt");
+    QFile fileCalibration(fileDirCalibration);
+    if(!fileCalibration.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(102,0,192);color:white}");
+        ui->lineEditStatus->setText("Файл калибровки не открыт или не существует");
+    }else
+    {
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(143,252,172);color:rgb(3,0,87)}");
+        ui->lineEditStatus->setText("Файл калибровки Открыт");
+    }
+    QString hLow(fileCalibration.readAll());
+    fileCalibration.close();
+    float *ULow = new float[3];
+    ULow = findMx(hLow);
+
+    fileDirCalibration = QString("data/dataCalibrationMiddle_")+ui->comboBoxAddress->currentText()+QString(".txt");
+    fileCalibration.setFileName(fileDirCalibration);
+    if(!fileCalibration.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        ui->lineEditStatus->setText("Файл калибровки не открыт или не существует");
+    }else
+    {
+        ui->lineEditStatus->setText("Файл калибровки Открыт");
+    }
+    QString hMidle(fileCalibration.readAll());
+    fileCalibration.close();
+    float *UMiddle = new float[3];
+    UMiddle = findMx(hMidle);
+
+    fileDirCalibration = QString("data/dataCalibrationHigh_")+ui->comboBoxAddress->currentText()+QString(".txt");
+    fileCalibration.setFileName(fileDirCalibration);
+    if(!fileCalibration.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        ui->lineEditStatus->setText("Файл калибровки не открыт или не существует");
+    }else
+    {
+        ui->lineEditStatus->setText("Файл калибровки Открыт");
+    }
+    QString hHigh(fileCalibration.readAll());
+    fileCalibration.close();
+    float *UHigh = new float[3];
+    UHigh = findMx(hHigh);
+    U4n = UMiddle[2]*1000;
+    U4l = ULow[2]*1000;
+    U4h = UHigh[2]*1000;
+    U1l = ULow[0]*1000;
+    U1h = UHigh[0]*1000;
+    U2l = ULow[1]*1000;
+    U2h = UHigh[1]*1000;
+    answerIsGet = true;
+    answerAnalisys = true;
+    requset1FindCoef = 0;
+    countTimerFinc3 = 0;
+    ui->buttonFindCoefMNK->setEnabled(false);
+    connect(timerFunction3,&QTimer::timeout,this,&HartTester::sendFindCoefRequestMNK);
+    timerFunction3->start(timerSendRequest);
+}
+void HartTester::updateDataMNK()
+{
+    deviceCoef.clearCalibration();
+    QString fileDirMNK = QString("data/dataMNK_")+ui->comboBoxAddress->currentText()+QString(".txt");
+    QFile fileMNK(fileDirMNK);
+    if(!fileMNK.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        ui->lineEditStatus->setText("НЕ ОТКРЫТ МНК");
+    }
+    else
+    {
+
+    }
+    QString dataMNK(fileMNK.readAll());
+    fileMNK.close();
+    QStringRef subString;
+    float* calcDataFile = new float[6];
+    int k = 0;
+    int len = 0;
+    int countVar = 0;
+    int pos = 0;
+    float f;
+    for(k=0;k<dataMNK.length();k++)
+    {
+        if(dataMNK[k] == 0x0009 ||(countVar%6==5 && dataMNK[k] == 0x000a))
+        {
+            subString = QStringRef(&dataMNK, pos, len);
+            if (countVar%6==0) {
+                f = subString.toFloat();
+                calcDataFile[0] = f*1000;
+            }
+            if (countVar%6==1) {
+                f = subString.toFloat();
+                calcDataFile[1] = f*1000;
+            }
+            if (countVar%6==2) {
+                f = subString.toFloat();
+                calcDataFile[2] = f*1000;
+            }
+            if (countVar%6==3) {
+                f = subString.toFloat();
+                calcDataFile[3] = f*1000;
+            }
+            if (countVar%6==4) {
+                f = subString.toFloat();
+                calcDataFile[4] = f*1000;
+            }
+            if (countVar%6==5) {
+                f = subString.toFloat();
+                calcDataFile[5] = f*1000;
+                deviceCoef.addLine(calcDataFile);
+            }
+            pos =k+1;
+            len =0;
+            countVar++;
+            continue;
+        }
+        len++;
+    }
+
+}
+
+void HartTester::sendFindCoefRequestMNK()
+{
+    if(countTimerFinc3 >(3000/timerSendRequest))//timeout
+    {
+        countTimerFinc3 = 0;
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("НE УДАЛОСЬ ПОЛУЧИТЬ КОЭФФИЦИЕНТЫ");
+        ui->buttonFindCoef->setEnabled(true);
+        timerFunction3->stop();
+        return void();
+    }
+    if(answerIsGet && !requset1FindCoef&&answerAnalisys)
+    {   unsigned char *data = new unsigned char [2];
+        data[0] = 0x1e;
+        data[1] = 0x04;
+        calibrationFunctionsGet(data,5);
+        answerAnalisys = false;
+        requset1FindCoef = true;
+        return void();
+    }
+    countTimerFinc3++;
+    if(answerIsGet)
+    {
+            countTimerFinc3 = 0;
+            answerAnalisys = true;
+            answer b(inBytesExpected);
+            b.createAnswer(ansGet,inBytesExpected);
+            b.analysis();
+            char *zData = new char [5];
+            zData = b.getData();
+            union{
+                float f;
+                char ie[4];
+
+            }transf;
+            transf.ie[0] = zData[3];
+            transf.ie[1] = zData[2];
+            transf.ie[2] = zData[1];
+            transf.ie[3] = zData[0];
+            //ui->lineEditGetA_40->setText(QString().number(transf.f));
+            //ui->lineEditStatus->insert(QString().number(transf.f));
+            if(requset1FindCoef)
+            {
+                Pkstat = transf.f;
+            }
+            if(requset1FindCoef)
+            {
+
+                /*deviceCoef.clearCalibration();
+                float *emulatedData = new float[6];
+                emulatedData[0] = 1962;
+                emulatedData[1] = 2705;
+                emulatedData[2] = 1019800;
+                emulatedData[3] = 890956;
+                emulatedData[4] = 0;
+                emulatedData[5] = 0;
+                deviceCoef.addLine(emulatedData);
+                emulatedData[0] = 5146;
+                emulatedData[1] = 5870;
+                emulatedData[2] = 1019710;
+                emulatedData[3] = 890624;
+                emulatedData[4] = 20000;
+                emulatedData[5] = 20000;
+                deviceCoef.addLine(emulatedData);
+                emulatedData[0] = 8323;
+                emulatedData[1] = 9031;
+                emulatedData[2] = 1019450;
+                emulatedData[3] = 890424;
+                emulatedData[4] = 40000;
+                emulatedData[5] = 40000;
+                deviceCoef.addLine(emulatedData);
+                emulatedData[0] = 11490;
+                emulatedData[1] = 12189;
+                emulatedData[2] = 1019169;
+                emulatedData[3] = 890310;
+                emulatedData[4] = 60000;
+                emulatedData[5] = 60000;
+                deviceCoef.addLine(emulatedData);
+                emulatedData[0] = 14646;
+                emulatedData[1] = 15343;
+                emulatedData[2] = 1018839;
+                emulatedData[3] = 890226;
+                emulatedData[4] = 80000;
+                emulatedData[5] = 80000;
+                deviceCoef.addLine(emulatedData);
+                emulatedData[0] = 17793;
+                emulatedData[1] = 18491;
+                emulatedData[2] = 1018800;
+                emulatedData[3] = 890216;
+                emulatedData[4] = 100000;
+                emulatedData[5] = 100000;
+                deviceCoef.addLine(emulatedData);
+                emulatedData[0] = 17793;
+                emulatedData[1] = 18491;
+                emulatedData[2] = 1018800;
+                emulatedData[3] = 890216;
+                emulatedData[4] = 100000;
+                emulatedData[5] = 100000;
+                deviceCoef.addLine(emulatedData);
+                emulatedData[0] = 14651;
+                emulatedData[1] = 15347;
+                emulatedData[2] = 1018600;
+                emulatedData[3] = 890000;
+                emulatedData[4] = 80000;
+                emulatedData[5] = 80000;
+                deviceCoef.addLine(emulatedData);
+                emulatedData[0] = 11498;
+                emulatedData[1] = 12197;
+                emulatedData[2] = 1018600;
+                emulatedData[3] = 889882;
+                emulatedData[4] = 60000;
+                emulatedData[5] = 60000;
+                deviceCoef.addLine(emulatedData);
+                emulatedData[0] = 8333;
+                emulatedData[1] = 9041;
+                emulatedData[2] = 1018600;
+                emulatedData[3] = 889796;
+                emulatedData[4] = 40000;
+                emulatedData[5] = 40000;
+                deviceCoef.addLine(emulatedData);
+                emulatedData[0] = 5158;
+                emulatedData[1] = 5879;
+                emulatedData[2] = 1018600;
+                emulatedData[3] = 889796;
+                emulatedData[4] = 20000;
+                emulatedData[5] = 20000;
+                deviceCoef.addLine(emulatedData);
+                emulatedData[0] = 1973;
+                emulatedData[1] = 2715;
+                emulatedData[2] = 1018600;
+                emulatedData[3] = 889796;
+                emulatedData[4] = 0;
+                emulatedData[5] = 0;
+                deviceCoef.addLine(emulatedData);*/
+                if(ui->checkBoxFromFile->checkState())
+                {
+                    updateDataMNK();
+                }
+                float U10 = deviceCoef.getU10();
+                float U20 = deviceCoef.getU20();
+                Uk1h = deviceCoef.getU1h(Pkstat);
+                Uk2h = deviceCoef.getU2h(Pkstat);
+                //U10 = 2190;
+                //U20 = 2904;
+                //Uk1h = 18041;
+                //Uk2h = 18497;
+
+                float K1 = Pkstat/(Uk1h-U10);
+                float K2 = Pkstat/(Uk2h-U20);
+                float a42 = 0,a41 = 0,a40 = 0;
+                a42 = -(K1*U10*U4h - K2*U20*U4h - K1*U10*U4l + K2*U20*U4l + K1*U1h*U4l - K1*U4h*U1l - K2*U2h*U4l + K2*U4h*U2l - K1*U1h*U4n + K2*U2h*U4n + K1*U1l*U4n - K2*U2l*U4n)/((U4h - U4l)*(U4h - U4n)*(U4l - U4n));
+                a41 = (- a42*U4l*U4l + a42*U4n*U4n + K1*(U10 - U1l) - K2*(U20 - U2l))/(U4l - U4n);
+                a40 = - a42*U4n*U4n - a41*U4n;
+                ui->lineEditSetA_40->setText(QString().number(a42));
+                ui->lineEditSetA_41->setText(QString().number(a41));
+                ui->lineEditSetA_42->setText(QString().number(a40));
+                disconnect(timerFunction3, &QTimer::timeout, this, &HartTester::sendFindCoefRequestMNK);
+                ui->buttonFindCoefMNK->setEnabled(true);
+                timerFunction3->stop();
+                if(ui->checkBoxParameterOutput->checkState())
+                {
+                    setDialog.show();
+                    setDialog.dialogData(Pkstat,Uk1h,Uk2h,U10,U20,U4l,U4n,U4h,U1l,U1h,U2l,U2h);
+                }
+                countTimerFinc3 = 0;
+                /*///////////////////////////////////////////
+                //Объявлениу и открытие файла записи данных МНК//
+                ///////////////////////////////////////////*/
+
+                QString fileDirCoef = QString("data/koefCalibration_")+QString(ui->comboBoxAddress->currentText())+QString(".txt");
+                QFile fileCoef(fileDirCoef);
+                if(!fileCoef.open(QIODevice::WriteOnly | QIODevice::Text))
+                {
+                    ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgba(255,64,0);color:white}");
+                    ui->lineEditStatus->setText("Файл коэффициентов не записан");
+
+                }
+                else
+                {
+                    fileCoef.write(QByteArray("Pmax = ")+QByteArray("%1").number(Pkstat/1000)+QByteArray(", кПа\n"));
+                    fileCoef.write(QByteArray("Uk1h = ")+QByteArray("%1").number(Uk1h/1000)+QByteArray(", мВ\n"));
+                    fileCoef.write(QByteArray("Uk2h = ")+QByteArray("%1").number(Uk2h/1000)+QByteArray(", мВ\n"));
+                    fileCoef.write(QByteArray("U10 = ")+QByteArray("%1").number(U10/1000)+QByteArray(", мВ\n"));
+                    fileCoef.write(QByteArray("U20 = ")+QByteArray("%1").number(U20/1000)+QByteArray(", мВ\n"));
+                    fileCoef.write(QByteArray("U4l = ")+QByteArray("%1").number(U4l/1000)+QByteArray(", мВ\n"));
+                    fileCoef.write(QByteArray("U4n = ")+QByteArray("%1").number(U4n/1000)+QByteArray(", мВ\n"));
+                    fileCoef.write(QByteArray("U4h = ")+QByteArray("%1").number(U4h/1000)+QByteArray(", мВ\n"));
+                    fileCoef.write(QByteArray("U1l = ")+QByteArray("%1").number(U1l/1000)+QByteArray(", мВ\n"));
+                    fileCoef.write(QByteArray("U1h = ")+QByteArray("%1").number(U1h/1000)+QByteArray(", мВ\n"));
+                    fileCoef.write(QByteArray("U2l = ")+QByteArray("%1").number(U2l/1000)+QByteArray(", мВ\n"));
+                    fileCoef.write(QByteArray("U2h = ")+QByteArray("%1").number(U2h/1000)+QByteArray(", мВ\n"));
+
+                    fileCoef.write(QByteArray("K1 = ")+QByteArray("%1").number(K1)+QByteArray("\n"));
+                    fileCoef.write(QByteArray("K2 = ")+QByteArray("%1").number(K2)+QByteArray("\n"));
+                    fileCoef.write(QByteArray("a42 = ")+QByteArray("%1").number(a40)+QByteArray("\n"));
+                    fileCoef.write(QByteArray("a41 = ")+QByteArray("%1").number(a41)+QByteArray("\n"));
+                    fileCoef.write(QByteArray("a40 = ")+QByteArray("%1").number(a42)+QByteArray("\n"));
+                    ui->lineEditStatus->setText("Файл калибровки МНК записан");
+                }
+                fileCoef.close();
+                deviceCoef.clearCalibration();
+            }
+    }
+}
+void HartTester::testFunc(float* g)
+{
+    ui->lineEditStatus->setText(QString().number(g[0]));
+    ui->lineEditStatus->insert(QString().number(g[1]));
+    ui->lineEditStatus->insert(QString().number(g[2]));
+    ui->lineEditStatus->insert(QString().number(g[3]));
+    Uk10 = g[0];
+    Uk20 = g[1];
+    Uk1h = g[2];
+    Uk2h = g[3];
+    answerIsGet = true;
+    answerAnalisys = true;
+    requset1FindCoef = 0;
+    requset2FindCoef = 0;
+    requset3FindCoef = 0;
+    requset4FindCoef = 0;
+    countTimerFinc3 = 0;
+    connect(timerFunction3,&QTimer::timeout,this,&HartTester::downloadCoef);
+    timerFunction3->start(timerSendRequest);
+    setDialog.close();
+}
+void HartTester::downloadCoef()
+{
+    if(countTimerFinc3 >(3000/timerSendRequest))//timeout
+    {
+        countTimerFinc3 = 0;
+        ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(255,0,0);color:white;font:bold}");
+        ui->lineEditStatus->setText("НE УДАЛОСЬ ЗАГРУЗИТЬ КОЭФФИЦИЕНТЫ");
+        timerFunction3->stop();
+        return void();
+    }
+    if(answerIsGet && !requset1FindCoef&&answerAnalisys)
+    {
+        union{
+            float f;
+            char ie[4];
+
+        }transf;
+        transf.f = Uk1h;
+        unsigned char *maxValue = new unsigned char [5];
+        maxValue[0] = 0x26;
+        maxValue[1] = transf.ie[3];
+        maxValue[2] = transf.ie[2];
+        maxValue[3] = transf.ie[1];
+        maxValue[4] = transf.ie[0];
+        calibrationFunctions(maxValue,5);
+        answerAnalisys = false;
+        requset1FindCoef = true;
+        return void();
+    }
+    if(answerIsGet && !requset2FindCoef&&answerAnalisys)
+    {
+        union{
+            float f;
+            char ie[4];
+
+        }transf;
+        transf.f = Uk2h;
+        unsigned char *maxValue = new unsigned char [5];
+        maxValue[0] = 0x2a;
+        maxValue[1] = transf.ie[3];
+        maxValue[2] = transf.ie[2];
+        maxValue[3] = transf.ie[1];
+        maxValue[4] = transf.ie[0];
+        calibrationFunctions(maxValue,5);
+        answerAnalisys = false;
+        requset2FindCoef = true;
+        return void();
+    }
+    if(answerIsGet && !requset3FindCoef&&answerAnalisys)
+    {
+        union{
+            float f;
+            char ie[4];
+
+        }transf;
+        transf.f = Uk10;
+        unsigned char *maxValue = new unsigned char [5];
+        maxValue[0] = 0x2e;
+        maxValue[1] = transf.ie[3];
+        maxValue[2] = transf.ie[2];
+        maxValue[3] = transf.ie[1];
+        maxValue[4] = transf.ie[0];
+        calibrationFunctions(maxValue,5);
+        answerAnalisys = false;
+        requset3FindCoef = true;
+        return void();
+    }
+    if(answerIsGet && !requset4FindCoef&&answerAnalisys)
+    {
+        union{
+            float f;
+            char ie[4];
+
+        }transf;
+        transf.f = Uk20;
+        unsigned char *maxValue = new unsigned char [5];
+        maxValue[0] = 0x32;
+        maxValue[1] = transf.ie[3];
+        maxValue[2] = transf.ie[2];
+        maxValue[3] = transf.ie[1];
+        maxValue[4] = transf.ie[0];
+        calibrationFunctions(maxValue,5);
+        answerAnalisys = false;
+        requset4FindCoef = true;
+        return void();
+    }
+    countTimerFinc3++;
+    if(answerIsGet)
+    {
+            countTimerFinc3 = 0;
+            answerAnalisys = true;
+            answer b(inBytesExpected);
+            b.createAnswer(ansGet,inBytesExpected);
+            b.analysis();
+            if(requset4FindCoef&&requset3FindCoef&&requset2FindCoef&&requset1FindCoef)
+            {
+                disconnect(timerFunction3, &QTimer::timeout, this, &HartTester::downloadCoef);
+                ui->lineEditStatus->setText("КОЭФФИЦИЕНТЫ ЗАГРУЖЕНЫ");
+                timerFunction3->stop();
+                countTimerFinc3 = 0;
+            }
+    }
 }

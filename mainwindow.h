@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include "dialog.h"
+#include "calibration.h"
+#include "answer.h"
 #include <QSerialPort>
 #include <QLineEdit>
 #include <QComboBox>
@@ -138,6 +140,7 @@ private slots:
 
     void updateCom();
     void findCoef();
+    void findCoefMNK();
     void clearCalibrationData();
     void on_spinBox_2_valueChanged(int arg1);
     void requestFunction3(QComboBox *f);
@@ -147,7 +150,19 @@ private slots:
     void aboutHartTester();
     void aboutQt();
     void sendFindCoefRequest();
+    void setPressue();
 
+    void on_spinBoxPressueNeg_valueChanged(int arg1);
+
+    void on_spinBoxPressuePos_valueChanged(int arg1);
+    void MO();
+    void clearMO();
+    void addDataCoef();
+    void displayData(answer b);
+    void sendFindCoefRequestMNK();
+    void updateDataMNK();
+    void testFunc(float* g);
+    void downloadCoef();
 private:
     Dialog setDialog;
     Ui::HartTester *ui;
@@ -157,6 +172,8 @@ private:
     QTimer *timerFunction3Loop = nullptr;
     QTimer *timerFindDevice = nullptr;
     QTimer *timerCalibration = nullptr;
+    calibration deviceCoef;
+    bool MOStart = false;
 };
 
 #endif // MAINWINDOW_H

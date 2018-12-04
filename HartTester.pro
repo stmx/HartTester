@@ -26,7 +26,8 @@ SOURCES += \
         mainwindow.cpp \
     answer.cpp \
     request.cpp \
-    dialog.cpp
+    dialog.cpp \
+    calibration.cpp
 RESOURCES +=
 RC_FILE = Hart.rc
 
@@ -34,7 +35,8 @@ HEADERS += \
         mainwindow.h \
     answer.h \
     request.h \
-    dialog.h
+    dialog.h \
+    calibration.h
 
 FORMS += \
         mainwindow.ui \

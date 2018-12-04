@@ -1,5 +1,6 @@
 #include "dialog.h"
 #include "ui_dialog.h"
+#include "mainwindow.h"
 
 Dialog::Dialog(QWidget *parent) :
     QDialog(parent),
@@ -31,4 +32,18 @@ void Dialog::dialogData(float Pstat,float Uk1h,float Uk2h, float Uk10, float Uk2
     ui->lineEditCoef_13->setText(QString().number(U2l));
     ui->lineEditCoef_14->setText(QString().number(U2h));
     //ui->lineEditCoef_3->setText(QString().number(Uk10));
+    dU10 = Uk10;
+    dU20 = Uk20;
+    dU1h = Uk1h;
+    dU2h = Uk2h;
+}
+
+void Dialog::on_pushButtonDownLoad_clicked()
+{
+    float *data = new float[4];
+    data[0] = dU10;
+    data[1] = dU20;
+    data[2] = dU1h;
+    data[3] = dU2h;
+    emit MySetValueSignal(data);
 }
