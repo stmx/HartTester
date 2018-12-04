@@ -25,17 +25,22 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     answer.cpp \
-    request.cpp
+    request.cpp \
+    dialog.cpp \
+    calibration.cpp
 RESOURCES +=
 RC_FILE = Hart.rc
 
 HEADERS += \
         mainwindow.h \
     answer.h \
-    request.h
+    request.h \
+    dialog.h \
+    calibration.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+    dialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
