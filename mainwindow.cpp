@@ -3250,10 +3250,11 @@ void HartTester::sendFindCoefRequestMNK()
                 emulatedData[4] = 0;
                 emulatedData[5] = 0;
                 deviceCoef.addLine(emulatedData);*/
-                if(ui->checkBoxFromFile->checkState())
-                {
-                    updateDataMNK();
-                }
+//                if(ui->checkBoxFromFile->checkState())
+//                {
+//                    updateDataMNK();//загрузка данных из файла в класс
+//                }
+                updateDataMNK();//загрузка данных из файла в класс
                 float U10 = deviceCoef.getU10();
                 float U20 = deviceCoef.getU20();
                 Uk1h = deviceCoef.getU1h(Pkstat);

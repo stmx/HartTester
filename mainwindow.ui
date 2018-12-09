@@ -2848,6 +2848,9 @@ p, li { white-space: pre-wrap; }
       </property>
      </widget>
      <widget class="QCheckBox" name="checkBoxFromFile">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>810</x>
