@@ -32,6 +32,7 @@ private slots:
     void sendFindRequest();
 
     void readData();
+    void readData_m();
     void clearText();
     void startLoop();
     void stopLoop();
@@ -166,12 +167,12 @@ private slots:
 private:
     Dialog setDialog;
     Ui::HartTester *ui;
-    QSerialPort *serial = nullptr;
-    QTimer *timer = nullptr;
-    QTimer *timerFunction3 = nullptr;
-    QTimer *timerFunction3Loop = nullptr;
-    QTimer *timerFindDevice = nullptr;
-    QTimer *timerCalibration = nullptr;
+    QSerialPort *serial = 0;
+    QTimer *timer = 0;
+    QTimer *timerFunction3 = 0;
+    QTimer *timerFunction3Loop = 0;
+    QTimer *timerFindDevice = 0;
+    QTimer *timerCalibration = 0;
     calibration deviceCoef;
     bool MOStart = false;
 };

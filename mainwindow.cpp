@@ -44,7 +44,7 @@ static int NumFunc;
 static unsigned char ReqData[2] = {0x04,0x02};
 static unsigned char ReqAddr[5] = {0x0f,0x02,0x06,0x01,0xfd};
 static int nSymAnsGet = 0;
-//static answer b(inBytesExpected);
+//static answer b(nSymHartAnswer);
 static char *ansGet = new char[inBytesExpected];
 static int prLength = 0;
 static unsigned char *data91;
@@ -83,6 +83,13 @@ static float U1l = 0;
 static float U1h = 0;
 static float U2l = 0;
 static float U2h = 0;
+static char *ansGet_m = new char[50];
+static bool IsPreamble = true;
+static int nSymPreamble = 0;
+static int nSymHartAnswer = 0;
+static bool LongFrame = false;
+static int nSymDataHartAnswer = 0;
+static int nSymHartAnswerTotal = 0;
 static float PPos = 100;
 static float PNeg = 100;
 static float avarageU1 = 0;
@@ -275,7 +282,7 @@ void HartTester::connections()
 
     connect(ui->actionDialog,            &QAction::triggered,  &setDialog,&Dialog::show);
 
-    connect(serial,                     &QSerialPort::readyRead,this,   &HartTester::readData);             //slot recieve data from COM port
+    connect(serial,                     &QSerialPort::readyRead,this,   &HartTester::readData_m);             //slot recieve data from COM port
     connect(timer,                      &QTimer::timeout,       this,   &HartTester::showTime);             //slot timer for sending loop request
     connect(timerFindDevice,            &QTimer::timeout,       this,   &HartTester::sendFindRequest);      //slot timer for sending find request
     connect(ui->buttonResetAddr,        &QPushButton::clicked,  this,   &HartTester::ResetAddressInit);     //slot button for reset combobox address
@@ -516,18 +523,17 @@ void HartTester::aboutQt()
 }
 void HartTester::connectCOM()//connect
 {
-    serial->open(QSerialPort::ReadWrite);
-    if (serial->portName() != ui->comboBox->currentText())
+    if (serial->portName() != ui->comboBox->currentText() || !serial->isOpen())
     {
           serial->close();
           serial->setPortName(ui->comboBox->currentText());
+          serial->open(QSerialPort::ReadWrite);
+          serial->setBaudRate(QSerialPort::Baud1200);
+          serial->setDataBits(QSerialPort::Data8);
+          serial->setParity(QSerialPort::OddParity);
+          serial->setStopBits(QSerialPort::OneStop);
+          serial->setFlowControl(QSerialPort::NoFlowControl);
     }
-    serial->setBaudRate(QSerialPort::Baud1200);
-    serial->setDataBits(QSerialPort::Data8);
-    serial->setParity(QSerialPort::OddParity);
-    serial->setStopBits(QSerialPort::OneStop);
-    serial->setFlowControl(QSerialPort::NoFlowControl);
-
     if(serial->isOpen()){
         ui->pushButton->setEnabled(false);
         ui->buttonClose->setEnabled(true);
@@ -571,6 +577,14 @@ void HartTester::sendRequest()//send
     QByteArray hex = QByteArray::fromHex(text);
     serial->write(hex,hex.length());
     answerIsGet = false;
+
+    nSymHartAnswer = 0;
+    nSymHartAnswerTotal = 0;
+    nSymHartAnswer = 0;
+    nSymDataHartAnswer= 0;
+    nSymPreamble = 0;
+    IsPreamble = true;
+
     if(serial->isOpen()){
         ui->lineEditStatus->setText("ОЖИДАНИЕ ОТВЕТА");
         ui->lineEditStatus->setStyleSheet("QLineEdit{background-color :rgb(0,255,0);color:white;font:bold}");
@@ -979,6 +993,148 @@ void HartTester::readData()//read data
     QTextCursor sb = ui->textEdit->textCursor();
     sb.movePosition(QTextCursor::End);
     ui->textEdit->setTextCursor(sb);
+}
+void HartTester::readData_m()
+{
+    int bytesAvaible = int(serial->bytesAvailable());
+    char *buf = new char[bytesAvaible];
+    serial->read(buf,bytesAvaible);
+    serial->clear(QSerialPort::Input);
+    int i = 0;
+    QTextEdit *text_out;
+    char sym;
+    for(i=0; i<bytesAvaible; i++)
+    {
+        sym = buf[i];
+        if((!IsPreamble) && nSymPreamble >2)
+        {
+            IsPreamble = false;
+            ansGet_m[nSymHartAnswer] = sym;
+            if(ansGet_m[nSymPreamble] == (char)0x82) LongFrame = 1;
+            else LongFrame = 0;
+            if(LongFrame == 0 && nSymHartAnswer == 3+nSymPreamble){
+                nSymDataHartAnswer = ansGet_m[3+nSymPreamble];
+                nSymHartAnswerTotal = nSymDataHartAnswer+5+nSymPreamble+2;
+            }
+            else if(LongFrame == 1 && nSymHartAnswer == 7+nSymPreamble){
+                nSymDataHartAnswer = ansGet_m[7+nSymPreamble];
+                nSymHartAnswerTotal = nSymDataHartAnswer+9+nSymPreamble+2;
+            }
+            nSymHartAnswer++;
+            if (nSymHartAnswer == nSymHartAnswerTotal && nSymHartAnswer !=0 )
+            {
+                QByteArray outText = QByteArray(ansGet_m,nSymHartAnswer).toHex();
+                int m = 0;
+                for(m=2;m<outText.length();m=m+3){
+                    outText = outText.insert(m," ");
+                }
+                if(int(ui->tabWidget->currentIndex())==0)
+                {
+                    ui->textEdit->setTextBackgroundColor(QColor(0,0,0));
+                    ui->textEdit->setTextColor(QColor(255,255,255));
+                    ui->textEdit->insertPlainText(outText);
+                }
+
+
+                answer b(nSymHartAnswer);
+                b.createAnswer(ansGet_m,nSymHartAnswer);
+                b.analysis();
+                if(b.CrcIsCorrect())
+                {
+                    answerIsGet = true;
+                    ui->lineEditStatus->setText("Верный ответ получен");
+//                    ui->textEdit->setTextBackgroundColor(QColor(0,255,0));
+//                    ui->textEdit->setTextColor(QColor(0,0,0));
+//                    ui->textEdit->insertPlainText("CRC Ok");
+//                    ui->textEdit->setTextBackgroundColor(QColor(255,255,255));
+                }
+                else
+                {
+                    ui->textEdit->setTextBackgroundColor(QColor(255,0,0));
+//                    ui->textEdit->setTextColor(QColor(0,0,0));
+//                    ui->textEdit->insertPlainText("CRC Bad");
+//                    ui->textEdit->setTextBackgroundColor(QColor(255,255,255));
+//                    ui->textEdit->setTextColor(QColor(0,0,0));
+                }
+                ui->textEdit->setTextColor(QColor(0,0,0));
+                answerIsGet = true;
+                if (int(ui->tabWidget->currentIndex())==1 && !timerFindDevice->isActive()) {
+                    displayData(b);
+                }
+
+                if(!ui->checkAltView->checkState())
+                {
+                    ui->textEdit->setTextBackgroundColor(QColor(0,0,0));
+                    ui->textEdit->setTextColor(QColor(255,255,255));
+                    //ui->textEdit->insertPlainText(outText+QString(""));
+                    if(int(ui->tabWidget->currentIndex())==0)
+                    {
+                        if(!b.CrcIsCorrect()){
+                            ui->textEdit->setTextBackgroundColor(QColor(255,0,0));
+                            ui->textEdit->setTextColor(QColor(0,0,0));
+                            ui->textEdit->insertPlainText("CRC Bad");
+                            ui->textEdit->setTextBackgroundColor(QColor(255,255,255));
+                            ui->textEdit->setTextColor(QColor(0,0,0));
+                        }else
+                        {
+                            ui->textEdit->setTextBackgroundColor(QColor(0,255,0));
+                            ui->textEdit->setTextColor(QColor(0,0,0));
+                            ui->textEdit->insertPlainText("CRC Ok");
+                            ui->textEdit->setTextBackgroundColor(QColor(255,255,255));
+
+                        }
+                    ui->textEdit->setTextColor(QColor(0,0,0));
+                    }
+                }
+                else
+                {
+                    answer b(nSymHartAnswer);
+                    b.createAnswer(ansGet_m,nSymHartAnswer);
+                    b.analysis();
+                    int n = 0;
+                    char *zData = new char [int(b.getnDataByte())];
+                    zData = b.getData();
+                    char t;
+                    ui->textEdit->clear();
+                    for(n=0;n<b.getnDataByte();n++){
+                        t = zData[n];
+                        int ghjghj = n+(int)ReqData[0];
+                        ui->textEdit->insertPlainText(QString("Address::")+QString("\t%1>:").number(ghjghj)+QString("\tData::")+QByteArray(1,t).toHex()+QString("\n"));
+                        if(((n+1)%4 == 0) & (n!=0)){
+                            union{
+                                float f;
+                                char ie[4];
+                            }transf;
+                            transf.ie[0] = zData[3+int((n-3))];
+                            transf.ie[1] = zData[2+int((n-3))];
+                            transf.ie[2] = zData[1+int((n-3))];
+                            transf.ie[3] = zData[0+int((n-3))];
+                            ui->textEdit->setTextBackgroundColor(QColor(0,0,0));
+                            ui->textEdit->setTextColor(QColor(255,255,255));
+                            ui->textEdit->insertPlainText(QString("Float ")+QString("\t%1>:").number(-3+int(n/1)+ReqData[0])+QString(" to ")+QString("\t%1>:").number(int(n/1)+ReqData[0])+QString(":\t")+QString("%1").number(transf.f)+QString("\n"));
+                            ui->textEdit->setTextBackgroundColor(QColor(255,255,255));
+                            ui->textEdit->setTextColor(QColor(0,0,0));
+                        }
+                    }
+
+                }
+            }
+        }
+        if((sym == (char)0x02||sym == (char)0x82)&& IsPreamble && nSymPreamble >2){//Ð’Ñ‹Ð´ÐµÐ»ÑÐµÐ¼ ÑÑ‚Ð°Ñ€Ñ‚Ð¾Ð²Ñ‹Ð¹ Ð±Ð°Ð¹Ñ‚
+            IsPreamble = 0;
+            //nSymHartAnswer++;
+            for(int j = 0; j<nSymPreamble;j++)
+            {
+                ansGet_m[j] = (char)0xff;
+            }
+            ansGet_m[nSymPreamble] = sym;
+            nSymHartAnswer = nSymPreamble+1;
+        }
+        if(sym == (char)0xff && IsPreamble)
+        {
+            nSymPreamble++;
+        }
+    }
 }
 void HartTester::clearText()//clear
 {
@@ -2369,8 +2525,9 @@ void HartTester::indicateGetAddress()
     if(answerIsGet)
     {
         countIndicateCalibration = 0;
-        answer b(inBytesExpected);
-        b.createAnswer(ansGet,inBytesExpected);
+        //answerTY b(inBytesExpected);
+        answer b(nSymHartAnswer);
+        b.createAnswer(ansGet_m,nSymHartAnswer);
         b.analysis();
         char *zData = new char [5];
         zData = b.getData();
@@ -2394,8 +2551,8 @@ void HartTester::indicateGetMode()
     if(answerIsGet)
     {
         countIndicateCalibration = 0;
-        answer b(inBytesExpected);
-        b.createAnswer(ansGet,inBytesExpected);
+        answer b(nSymHartAnswer);
+        b.createAnswer(ansGet_m,nSymHartAnswer);
         b.analysis();
         char *zData = new char [5];
         zData = b.getData();
@@ -2425,8 +2582,8 @@ void HartTester::indicateGetMaxValue()
     if(answerIsGet)
     {
         countIndicateCalibration = 0;
-        answer b(inBytesExpected);
-        b.createAnswer(ansGet,inBytesExpected);
+        answer b(nSymHartAnswer);
+        b.createAnswer(ansGet_m,nSymHartAnswer);
         b.analysis();
         char *zData = new char [5];
         zData = b.getData();
@@ -2458,8 +2615,8 @@ void HartTester::indicateGetMaxValue_2()
     if(answerIsGet)
     {
         countIndicateCalibration = 0;
-        answer b(inBytesExpected);
-        b.createAnswer(ansGet,inBytesExpected);
+        answer b(nSymHartAnswer);
+        b.createAnswer(ansGet_m,nSymHartAnswer);
         b.analysis();
         char *zData = new char [5];
         zData = b.getData();
@@ -2491,8 +2648,8 @@ void HartTester::indicateGetMovingAverage_1()
     if(answerIsGet)
     {
         countIndicateCalibration = 0;
-        answer b(inBytesExpected);
-        b.createAnswer(ansGet,inBytesExpected);
+        answer b(nSymHartAnswer);
+        b.createAnswer(ansGet_m,nSymHartAnswer);
         b.analysis();
         char *zData = new char [5];
         zData = b.getData();
@@ -2515,8 +2672,8 @@ void HartTester::indicateGetMovingAverage_2()
     if(answerIsGet)
     {
         countIndicateCalibration = 0;
-        answer b(inBytesExpected);
-        b.createAnswer(ansGet,inBytesExpected);
+        answer b(nSymHartAnswer);
+        b.createAnswer(ansGet_m,nSymHartAnswer);
         b.analysis();
         char *zData = new char [5];
         zData = b.getData();
@@ -2539,8 +2696,8 @@ void HartTester::indicateGetA_40()
     if(answerIsGet)
     {
         countIndicateCalibration = 0;
-        answer b(inBytesExpected);
-        b.createAnswer(ansGet,inBytesExpected);
+        answer b(nSymHartAnswer);
+        b.createAnswer(ansGet_m,nSymHartAnswer);
         b.analysis();
         char *zData = new char [5];
         zData = b.getData();
@@ -2571,8 +2728,8 @@ void HartTester::indicateGetA_41()
     if(answerIsGet)
     {
         countIndicateCalibration = 0;
-        answer b(inBytesExpected);
-        b.createAnswer(ansGet,inBytesExpected);
+        answer b(nSymHartAnswer);
+        b.createAnswer(ansGet_m,nSymHartAnswer);
         b.analysis();
         char *zData = new char [5];
         zData = b.getData();
@@ -2603,8 +2760,8 @@ void HartTester::indicateGetA_42()
     if(answerIsGet)
     {
         countIndicateCalibration = 0;
-        answer b(inBytesExpected);
-        b.createAnswer(ansGet,inBytesExpected);
+        answer b(nSymHartAnswer);
+        b.createAnswer(ansGet_m,nSymHartAnswer);
         b.analysis();
         char *zData = new char [5];
         zData = b.getData();
@@ -2635,8 +2792,8 @@ void HartTester::indicateGetPressue()
     if(answerIsGet)
     {
         countIndicateCalibration = 0;
-        answer b(inBytesExpected);
-        b.createAnswer(ansGet,inBytesExpected);
+        answer b(nSymHartAnswer);
+        b.createAnswer(ansGet_m,nSymHartAnswer);
         b.analysis();
         char *zData = new char [5];
         zData = b.getData();
@@ -2667,8 +2824,8 @@ void HartTester::indicateGetCurrent()
     if(answerIsGet)
     {
         countIndicateCalibration = 0;
-        answer b(inBytesExpected);
-        b.createAnswer(ansGet,inBytesExpected);
+        answer b(nSymHartAnswer);
+        b.createAnswer(ansGet_m,nSymHartAnswer);
         b.analysis();
         char *zData = new char [5];
         zData = b.getData();
@@ -2945,8 +3102,8 @@ void HartTester::sendFindCoefRequest()
     {
             countTimerFinc3 = 0;
             answerAnalisys = true;
-            answer b(inBytesExpected);
-            b.createAnswer(ansGet,inBytesExpected);
+            answer b(nSymHartAnswer);
+            b.createAnswer(ansGet_m,nSymHartAnswer);
             b.analysis();
             char *zData = new char [5];
             zData = b.getData();
@@ -3366,8 +3523,8 @@ void HartTester::sendFindCoefRequestMNK()
     {
             countTimerFinc3 = 0;
             answerAnalisys = true;
-            answer b(inBytesExpected);
-            b.createAnswer(ansGet,inBytesExpected);
+            answer b(nSymHartAnswer);
+            b.createAnswer(ansGet_m,nSymHartAnswer);
             b.analysis();
             char *zData = new char [5];
             zData = b.getData();
@@ -3658,8 +3815,8 @@ void HartTester::downloadCoef()
     {
             countTimerFinc3 = 0;
             answerAnalisys = true;
-            answer b(inBytesExpected);
-            b.createAnswer(ansGet,inBytesExpected);
+            answer b(nSymHartAnswer);
+            b.createAnswer(ansGet_m,nSymHartAnswer);
             b.analysis();
             if(requset4FindCoef&&requset3FindCoef&&requset2FindCoef&&requset1FindCoef)
             {
