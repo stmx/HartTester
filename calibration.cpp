@@ -31,13 +31,13 @@ void calibration::addLine(float *b)
     {
         K1 = (n*U1sumxy-U1sumx*U1sumy)/(n*U1sumx2-U1sumx*U1sumx);
         b1 = (U1sumy-K1*U1sumx)/(n);
-        U10 = -b1/K1;
+        U10 = b1;
     }
     if(n>1)
     {
         K2 = (n*U2sumxy-U2sumx*U2sumy)/(n*U2sumx2-U2sumx*U2sumx);
         b2 = (U2sumy-K2*U2sumx)/(n);
-        U20 = -b2/K2;
+        U20 = b2;
     }
 }
 void calibration::clearCalibration()
@@ -58,7 +58,7 @@ void calibration::clearCalibration()
 }
 float calibration::getK1()
 {
-    return K1;
+    return 1/K1;
 }
 float calibration::getb1()
 {
@@ -66,7 +66,7 @@ float calibration::getb1()
 }
 float calibration::getK2()
 {
-    return K2;
+    return 1/K2;
 }
 float calibration::getb2()
 {
@@ -82,12 +82,12 @@ float calibration::getU20()
 }
 float calibration::getU1h(float Pmax)
 {
-    U1h = (Pmax/K1)+U10;
+    U1h = (Pmax*K1)+U10;
     return U1h;
 }
 float calibration::getU2h(float Pmax)
 {
-    U2h = (Pmax/K2)+U20;
+    U2h = (Pmax*K2)+U20;
     return U2h;
 }
 
